@@ -1,0 +1,264 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Carbon Impulse Model</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single lab-notebook column; two numbered experiments (validation, then application), each a control strip above a chart */
+:root{
+  --bg:#f2f5f4; --panel:#ffffff; --ink:#15232a; --muted:#566a71; --rule:#d5dfde;
+  --ocean:#0f6b7c; --fossil:#b7791f; --obs:#15232a; --pass:#2f7d4f; --fail:#b23b3b;
+  --c0:#24434d; --c1:#3f7f8c; --c2:#7fb4bb; --c3:#c3dfe0; --band:rgba(183,121,31,.18);
+  --f-display:"Literata",Georgia,serif; --f-body:"Public Sans",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1a1e; --panel:#162429; --ink:#e3ecec; --muted:#93a8ad; --rule:#2a3c42;
+  --ocean:#4fb6c6; --fossil:#e0a54a; --obs:#e3ecec; --pass:#6cc48f; --fail:#ec7d7d;
+  --c0:#b9dadd; --c1:#6fb0bb; --c2:#3c7f8a; --c3:#24525a; --band:rgba(224,165,74,.2); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1a1e; --panel:#162429; --ink:#e3ecec; --muted:#93a8ad; --rule:#2a3c42;
+  --ocean:#4fb6c6; --fossil:#e0a54a; --obs:#e3ecec; --pass:#6cc48f; --fail:#ec7d7d;
+  --c0:#b9dadd; --c1:#6fb0bb; --c2:#3c7f8a; --c3:#24525a; --band:rgba(224,165,74,.2); color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--f-display);font-weight:650;text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(26px,4vw,36px)}
+h2{font-size:22px}
+p{margin:0;max-width:68ch}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:10px}
+.formula{font-family:var(--f-mono);font-size:13.5px;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:nowrap}
+section.exp{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 22px}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ctl output{font-family:var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--ocean)}
+input[type=range]:focus-visible,button:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
+.seg{display:flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{flex:1;font:inherit;font-size:13px;padding:6px 8px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ocean);color:var(--panel)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{border-top:2px solid var(--rule);padding-top:6px;display:flex;flex-direction:column;gap:2px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--f-mono);font-size:19px;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-family:var(--f-mono);font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid currentColor}
+.pass{color:var(--pass)} .fail{color:var(--fail)}
+.chart{width:100%;overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto;min-width:300px}
+svg text{fill:var(--muted);font-family:var(--f-mono);font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:2px;display:inline-block}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.notes h3{font-family:var(--f-display);font-size:17px;margin:0 0 6px}
+.notes p,.notes li{font-size:14px;color:var(--ink)}
+.notes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+a{color:var(--ocean)}
+.small{font-size:13px;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.step{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;font-size:14px}
+.step b{display:block;font-family:var(--f-display);font-size:16px;margin-bottom:2px}
+.verdict{font-size:16px;font-weight:500;max-width:none}
+.verdict .hl{font-family:var(--f-mono)}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">02-120 class project · carbon dioxide model</span>
+  <h1>How much of our CO₂ stays in the air?</h1>
+  <p>When we burn fuel or cut down forests, CO₂ goes into the air. The ocean and plants slowly soak some of it back up, but not all of it. This page uses a published scientific model (Joos et al., 2013) to estimate how much stays in the air, and checks the answer against real measurements.</p>
+  <div class="steps">
+    <div class="step"><b>1. Release carbon.</b> Each year adds a batch of CO₂ to the air.</div>
+    <div class="step"><b>2. Nature removes some.</b> Part disappears in a few years, part over decades, part over centuries. About a fifth never leaves on human timescales.</div>
+    <div class="step"><b>3. Add it all up.</b> What's left from every year's batch is the extra CO₂ in the air today.</div>
+  </div>
+  <p class="small"><b>Units:</b> GtC = billion tonnes of carbon. ppm = parts per million, the unit for CO₂ in the air. 2.124 GtC raises CO₂ by 1 ppm.</p>
+</header>
+
+<section class="exp" aria-labelledby="h-pulse">
+  <span class="eyebrow">Test 1 · does the model match the paper?</span>
+  <h2 id="h-pulse">Release carbon once, then watch it fade</h2>
+  <p class="small">The paper found that if you release 100 GtC all at once, about <b>25%</b> (anywhere from 16% to 34%) is still in the air 1,000 years later. Drag the sliders to see what the model says.</p>
+  <div class="controls">
+    <div class="ctl"><label for="pSize">Carbon released at once <output id="pSizeOut"></output></label><input id="pSize" type="range" min="10" max="1000" step="10" value="100"></div>
+    <div class="ctl"><label for="pT">Years later <output id="pTOut"></output></label><input id="pT" type="range" min="1" max="1000" step="1" value="1000"></div>
+  </div>
+  <p class="verdict" id="pVerdict"></p>
+  <div class="stats" id="pStats"></div>
+  <div class="chart" id="pChart"></div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--c3)"></i>Gone within a few years</span>
+    <span><i class="sw" style="background:var(--c2)"></i>Gone over decades</span>
+    <span><i class="sw" style="background:var(--c1)"></i>Gone over centuries (deep ocean)</span>
+    <span><i class="sw" style="background:var(--c0)"></i>Stays for thousands of years</span>
+    <span><i class="sw" style="background:var(--band)"></i>Paper's answer at 1,000 years</span>
+  </div>
+</section>
+
+<section class="exp" aria-labelledby="h-hist">
+  <span class="eyebrow">Test 2 · does the model match the real world?</span>
+  <h2 id="h-hist">Real emissions vs. measured CO₂</h2>
+  <p class="small">This feeds every year of real emissions since 1850 into the model and compares its prediction (line) with CO₂ measured at Mauna Loa, Hawaii (dots). The bars along the bottom show how much carbon was emitted each year.</p>
+  <div class="controls">
+    <div class="ctl"><label>Emissions to include</label>
+      <div class="seg" role="group" aria-label="Emissions to include"><button id="bF" type="button" aria-pressed="false">Fuel only</button><button id="bT" type="button" aria-pressed="true">Fuel + forests</button></div></div>
+    <div class="ctl"><label for="hScale">What if emissions were… <output id="hScaleOut"></output></label><input id="hScale" type="range" min="0" max="2" step="0.05" value="1"></div>
+    <div class="ctl"><label for="hStart">Start year <output id="hStartOut"></output></label><input id="hStart" type="range" min="0" max="52" step="1" value="0"></div>
+    <div class="ctl"><label for="hEnd">End year <output id="hEndOut"></output></label><input id="hEnd" type="range" min="1900" max="2024" step="1" value="2024"></div>
+  </div>
+  <p class="verdict" id="hVerdict"></p>
+  <div class="stats" id="hStats"></div>
+  <div class="chart" id="hChart"></div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--ocean)"></i>Model prediction</span>
+    <span><i class="sw" style="background:var(--obs);border-radius:50%;width:8px;height:8px"></i>Measured at Mauna Loa</span>
+    <span><i class="sw" style="background:var(--fossil);opacity:.55"></i>Carbon emitted per year (right axis)</span>
+  </div>
+</section>
+
+<section class="notes" aria-label="What we learned">
+  <div>
+    <h3>What we learned</h3>
+    <ul>
+      <li><b>Test 1 passes.</b> The model leaves 23.5% of the carbon after 1,000 years. The paper says about 25%.</li>
+      <li><b>Test 2 overshoots.</b> With all real emissions, the model predicts 478 ppm for 2024. The real value was 425 ppm.</li>
+      <li>"Fuel only" looks close, but that's luck: it leaves out a third of the real emissions.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Why the model overshoots</h3>
+    <ul>
+      <li>It was built for today's air, which already has extra CO₂. Today's ocean is fuller, so it soaks up CO₂ more slowly than the ocean of the 1800s did.</li>
+      <li>It ignores that plants grow faster with more CO₂ and so take up more of it.</li>
+      <li>So it removes too little carbon, and more CO₂ stays in the air than really did.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>For the math</h3>
+    <div class="formula">IRF(t) = 0.2173 + 0.2240·e<sup>−t/394.4</sup> + 0.2824·e<sup>−t/36.54</sup> + 0.2763·e<sup>−t/4.304</sup></div>
+    <p class="small">IRF(t) is the share of the carbon still in the air t years after it's released. CO₂(year) = starting CO₂ + Σ emissions × IRF(years since emitted) ÷ 2.124. A run starting in 1850 begins at 285 ppm. A later start begins at that year's Mauna Loa value and ignores earlier emissions.</p>
+    <p class="small">Data: <a href="https://github.com/owid/co2-data" target="_blank" rel="noopener">Global Carbon Budget emissions via Our World in Data</a> · <a href="https://github.com/datasets/co2-ppm" target="_blank" rel="noopener">Mauna Loa CO₂ (NOAA)</a> · <a href="https://acp.copernicus.org/articles/13/2793/2013/" target="_blank" rel="noopener">Joos et al. (2013)</a></p>
+  </div>
+</section>
+</div>
+</div>
+
+<script>
+const D={"y0":1850,"fossil":[0.0537,0.0542,0.0566,0.0592,0.0696,0.071,0.0759,0.0767,0.0779,0.0825,0.0906,0.0952,0.0971,0.1035,0.1117,0.1186,0.1225,0.1311,0.1349,0.1431,0.1462,0.1554,0.1721,0.1829,0.1715,0.1857,0.1883,0.192,0.1935,0.2072,0.2341,0.2422,0.2559,0.2721,0.2754,0.2775,0.2817,0.2957,0.3276,0.3278,0.3565,0.3735,0.3765,0.3718,0.3852,0.408,0.4215,0.4414,0.4655,0.5085,0.5353,0.5524,0.5664,0.6176,0.6246,0.6656,0.6952,0.7923,0.761,0.7928,0.8319,0.8447,0.8874,0.9613,0.8721,0.8586,0.9273,0.97,0.9562,0.8294,0.9673,0.8495,0.8904,1.0099,1.0135,1.0202,1.0029,1.0944,1.0899,1.1695,1.0795,0.9653,0.8707,0.9171,0.9971,1.0461,1.1476,1.2264,1.1535,1.2191,1.3322,1.3634,1.3589,1.3842,1.408,1.1698,1.2569,1.4087,1.4858,1.4193,1.6174,1.7405,1.7639,1.8139,1.8517,2.0302,2.1617,2.2325,2.2957,2.415,2.5601,2.5677,2.6583,2.8,2.9521,3.0847,3.2353,3.3375,3.5196,3.7532,4.0634,4.2283,4.4249,4.6574,4.6358,4.6332,4.8716,5.0067,5.1886,5.3205,5.2936,5.149,5.1081,5.155,5.3065,5.4941,5.574,5.7562,5.9778,6.0546,6.1997,6.3288,6.1419,6.2045,6.2658,6.4136,6.6091,6.6492,6.6261,6.7739,6.9577,7.0072,7.1633,7.5416,7.8027,8.0724,8.3439,8.5907,8.7408,8.5945,9.0866,9.4036,9.5331,9.6207,9.6725,9.6555,9.6526,9.8113,10.0184,10.1145,9.5886,10.0546,10.2348,10.3893,10.5269],"luc":[0.7402,0.7693,0.7956,0.8006,0.8115,0.8258,0.8301,0.8432,0.8488,0.8607,0.7898,0.7545,0.7343,0.7262,0.7327,0.7113,0.7148,0.7023,0.6991,0.6971,0.794,0.8174,0.8612,0.8752,0.9029,0.9088,0.9239,0.9482,0.9631,0.9787,0.9881,0.9828,1.0046,1.0211,1.0225,1.0241,1.0228,1.0388,1.0365,1.0459,1.1226,1.1471,1.1405,1.1506,1.1737,1.17,1.1742,1.1933,1.1976,1.2074,1.2166,1.2506,1.2621,1.2718,1.3014,1.3102,1.3286,1.3292,1.3422,1.3636,1.3086,1.2997,1.2729,1.2601,1.2618,1.2418,1.2385,1.2162,1.2046,1.196,1.3027,1.3597,1.3791,1.4095,1.3947,1.4315,1.4362,1.4376,1.4527,1.4679,1.4831,1.5066,1.5178,1.5057,1.5203,1.5031,1.5395,1.5343,1.5452,1.537,1.5664,1.6067,1.6105,1.6075,1.5889,1.5991,1.5893,1.5759,1.5613,1.55,1.8147,1.9629,1.9776,2.0137,2.1291,2.1802,2.1984,2.2582,2.2398,2.3708,2.0756,2.081,1.9468,1.8964,1.8163,1.7415,1.6138,1.7047,1.7256,1.8929,1.8245,1.6744,1.7558,1.7057,1.7217,1.67,1.6528,1.8055,1.7902,1.597,1.6367,1.5918,1.5086,1.5927,1.7522,1.8512,1.8936,1.7722,1.6791,1.6311,1.5897,1.5601,1.6276,1.5636,1.8188,1.7122,1.7841,2.1872,1.8524,1.7896,1.6761,1.4893,1.6619,1.9967,1.7574,1.6176,1.6456,1.5254,1.623,1.7822,1.7776,1.7434,1.8224,1.7235,1.7482,1.7762,1.4663,1.4476,1.3315,1.3329,1.2318,1.2701,1.3051,1.2942,1.2506],"mloY0":1959,"mlo":[315.98,316.91,317.64,318.45,318.99,319.62,320.04,321.37,322.18,323.05,324.62,325.68,326.32,327.46,329.68,330.19,331.13,332.03,333.84,335.41,336.84,338.76,340.12,341.48,343.15,344.87,346.35,347.61,349.31,351.69,353.2,354.45,355.7,356.54,357.21,358.96,360.97,362.74,363.88,366.84,368.54,369.71,371.32,373.45,375.98,377.7,379.98,382.09,384.02,385.83,387.64,390.1,391.85,394.06,396.74,398.81,401.01,404.41,406.76,408.72,411.65,414.21,416.41,418.53,421.08,424.61,427.35]};
+
+const A=[0.2173,0.2240,0.2824,0.2763], TAU=[394.4,36.54,4.304], PPM=2.124, C1850=285;
+const term=(i,t)=> i===0?A[0]:A[i]*Math.exp(-t/TAU[i-1]);
+const irf=t=>term(0,t)+term(1,t)+term(2,t)+term(3,t);
+const $=id=>document.getElementById(id);
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function ticks(lo,hi,n){const span=hi-lo,step0=span/n,mag=Math.pow(10,Math.floor(Math.log10(step0)));const step=[1,2,2.5,5,10].map(m=>m*mag).find(s=>s>=step0);const out=[];for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step)out.push(+v.toFixed(6));return out}
+function frame(host,W,H,m){host.innerHTML="";const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img"},host);return {svg,W,H,m,iw:W-m.l-m.r,ih:H-m.t-m.b}}
+function axes(f,xs,ys,xd,yd,ylab,y2){const g=el("g",{},f.svg);
+  for(const v of ticks(yd[0],yd[1],5)){const y=ys(v);el("line",{x1:f.m.l,x2:f.W-f.m.r,y1:y,y2:y,stroke:"var(--rule)","stroke-width":1},g);const t=el("text",{x:f.m.l-6,y:y+4,"text-anchor":"end"},g);t.textContent=v}
+  for(const v of ticks(xd[0],xd[1],6)){const x=xs(v);const t=el("text",{x,y:f.H-f.m.b+16,"text-anchor":"middle"},g);t.textContent=v;el("line",{x1:x,x2:x,y1:f.H-f.m.b,y2:f.H-f.m.b+4,stroke:"var(--muted)"},g)}
+  el("line",{x1:f.m.l,x2:f.W-f.m.r,y1:f.H-f.m.b,y2:f.H-f.m.b,stroke:"var(--muted)"},g);
+  const yl=el("text",{x:12,y:f.m.t+f.ih/2,transform:`rotate(-90 12 ${f.m.t+f.ih/2})`,"text-anchor":"middle"},g);yl.textContent=ylab;
+  return g}
+function stat(k,v,extra=""){return `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span>${extra}</div>`}
+
+/* ---------- Experiment 1: pulse ---------- */
+function drawPulse(){
+  const P=+$("pSize").value, T=+$("pT").value;
+  $("pSizeOut").textContent=P+" GtC"; $("pTOut").textContent=T;
+  const frac=irf(T), at1000=irf(1000), ok=at1000>=0.16&&at1000<=0.34;
+  $("pStats").innerHTML=
+    stat(`Still in the air after ${T} yr`,`${(P*frac).toFixed(1)} GtC (${(frac*100).toFixed(1)}%)`)+
+    stat("Model at 1,000 yr (paper: 16–34%)",`${(at1000*100).toFixed(1)}%`,`<span class="pill ${ok?"pass":"fail"}">${ok?"matches the paper":"does not match"}</span>`)+
+    stat("Soaked up by ocean and plants",`${(P*(1-frac)).toFixed(1)} GtC`);
+  const f=frame($("pChart"),900,330,{l:62,r:16,t:14,b:30});
+  const xd=[0,1000], yd=[0,P];
+  const xs=v=>f.m.l+(v-xd[0])/(xd[1]-xd[0])*f.iw, ys=v=>f.m.t+f.ih-(v-yd[0])/(yd[1]-yd[0])*f.ih;
+  axes(f,xs,ys,xd,yd,"Carbon still in air (GtC)");
+  $("pVerdict").innerHTML=`Of <span class="hl">${P} GtC</span> released, <span class="hl">${(P*frac).toFixed(1)} GtC</span> (${(frac*100).toFixed(1)}%) is still in the air after ${T} years. The ocean and plants have taken the rest.`;
+  // published band at 1000 yr
+  el("rect",{x:xs(950),y:ys(P*0.34),width:xs(1000)-xs(950),height:ys(P*0.16)-ys(P*0.34),fill:"var(--band)"},f.svg);
+  // stacked components, from a0 up
+  const ts=[];for(let t=0;t<=1000;t+=t<50?1:5)ts.push(t);
+  let base=ts.map(()=>0);
+  ["--c0","--c1","--c2","--c3"].forEach((c,i)=>{
+    const top=ts.map((t,j)=>base[j]+P*term(i,t));
+    let d="M"+ts.map((t,j)=>`${xs(t).toFixed(1)},${ys(top[j]).toFixed(1)}`).join("L");
+    for(let j=ts.length-1;j>=0;j--)d+=`L${xs(ts[j]).toFixed(1)},${ys(base[j]).toFixed(1)}`;
+    el("path",{d:d+"Z",fill:`var(${c})`},f.svg); base=top;});
+  el("path",{d:"M"+ts.map((t,j)=>`${xs(t).toFixed(1)},${ys(base[j]).toFixed(1)}`).join("L"),fill:"none",stroke:"var(--ink)","stroke-width":1.5},f.svg);
+  const x=xs(T),y=ys(P*frac);
+  el("line",{x1:x,x2:x,y1:f.m.t,y2:f.H-f.m.b,stroke:"var(--fossil)","stroke-dasharray":"4 3"},f.svg);
+  el("circle",{cx:x,cy:y,r:4.5,fill:"var(--fossil)",stroke:"var(--panel)","stroke-width":1.5},f.svg);
+  const lab=el("text",{x:T>800?x-8:x+8,y:Math.max(f.m.t+12,y-10),"text-anchor":T>800?"end":"start",style:"fill:var(--ink)"},f.svg);
+  lab.textContent=`${(frac*100).toFixed(1)}% at year ${T}`;
+  const xl=el("text",{x:f.m.l+f.iw/2,y:f.H-2,"text-anchor":"middle"},f.svg);xl.textContent="";
+}
+
+/* ---------- Experiment 2: history ---------- */
+const START_OPTS=[1850].concat(Array.from({length:52},(_,i)=>1959+i)); // 1850, 1959..2010
+let useLuc=true;
+const N=D.fossil.length, YEARS=Array.from({length:N},(_,i)=>D.y0+i);
+const obsAt=y=>D.mlo[y-D.mloY0];
+const KERNEL=Array.from({length:N},(_,k)=>irf(k+0.5));
+function runHist(start,scale,luc){
+  const i0=start-D.y0, C0=start===1850?C1850:obsAt(start);
+  const E=YEARS.slice(i0).map((_,j)=>scale*(D.fossil[i0+j]+(luc?D.luc[i0+j]:0)));
+  const C=E.map((_,j)=>{let s=0;for(let k=0;k<=j;k++)s+=E[k]*KERNEL[j-k];return C0+s/PPM});
+  return {years:YEARS.slice(i0),E,C,C0};
+}
+function drawHist(){
+  const start=START_OPTS[+$("hStart").value], scale=+$("hScale").value;
+  const endEl=$("hEnd"); endEl.min=Math.max(start+10,1900); if(+endEl.value<+endEl.min)endEl.value=endEl.min;
+  const end=+endEl.value;
+  $("hStartOut").textContent=start===1850?"1850 (285 ppm)":`${start} (${obsAt(start)} ppm)`;
+  $("hScaleOut").textContent=scale===1?"real amount":Math.round(scale*100)+"% of real";
+  $("hEndOut").textContent=end;
+  const r=runHist(start,scale,useLuc);
+  const idx=r.years.indexOf(end);
+  const years=r.years.slice(0,idx+1), C=r.C.slice(0,idx+1), E=r.E.slice(0,idx+1);
+  const both=years.filter(y=>y>=D.mloY0&&y>start);
+  let sse=0,sb=0; both.forEach(y=>{const d=C[years.indexOf(y)]-obsAt(y);sse+=d*d;sb+=d});
+  const n=both.length, cum=E.reduce((a,b)=>a+b,0);
+  const afM=(C[C.length-1]-r.C0)*PPM/cum;
+  const obsEnd=end>=D.mloY0?obsAt(end):null;
+  const afO=obsEnd!=null?(obsEnd-r.C0)*PPM/(cum/scale):null;
+  const diff=obsEnd!=null?C[C.length-1]-obsEnd:null;
+  $("hStats").innerHTML=
+    stat(`Model predicts for ${end}`,`${C[C.length-1].toFixed(1)} ppm`)+
+    stat(`Measured in ${end}`,obsEnd!=null?`${obsEnd.toFixed(1)} ppm`:"no data before 1959")+
+    stat("Average miss, all years",n?`${sb/n>=0?"+":""}${(sb/n).toFixed(1)} ppm`:"–")+
+    stat("Share of emissions left in air: model / real",`${(afM*100).toFixed(0)}% / ${afO!=null?(afO*100).toFixed(0)+"%":"–"}`);
+  const V=$("hVerdict");
+  if(diff==null) V.textContent=`Measurements start in 1959, so move the end year to 1959 or later to compare.`;
+  else if(Math.abs(diff)<3) V.innerHTML=`In ${end} the model is within <span class="hl">${Math.abs(diff).toFixed(1)} ppm</span> of the measured value. That is a close match.`;
+  else V.innerHTML=`In ${end} the model is <span class="hl">${Math.abs(diff).toFixed(1)} ppm too ${diff>0?"high":"low"}</span>. ${diff>0?"It leaves more CO₂ in the air than really stayed there.":"It leaves less CO₂ in the air than really stayed there."}`;
+  const f=frame($("hChart"),900,380,{l:62,r:52,t:14,b:30});
+  const yObs=D.mlo.filter((_,i)=>D.mloY0+i<=end&&D.mloY0+i>=start);
+  const lo=Math.min(r.C0,...C,...yObs), hi=Math.max(...C,...yObs);
+  const xd=[start,end], yd=[Math.floor((lo-5)/10)*10,Math.ceil((hi+5)/10)*10];
+  const xs=v=>f.m.l+(v-xd[0])/(xd[1]-xd[0])*f.iw, ys=v=>f.m.t+f.ih-(v-yd[0])/(yd[1]-yd[0])*f.ih;
+  // emissions bars on right axis
+  const eMax=Math.max(12,...E)*1.05, ye=v=>f.m.t+f.ih-v/eMax*f.ih*0.3;
+  const bw=Math.max(1,f.iw/years.length*0.7);
+  const gb=el("g",{opacity:.35},f.svg);
+  years.forEach((y,j)=>el("rect",{x:xs(y)-bw/2,y:ye(E[j]),width:bw,height:f.m.t+f.ih-ye(E[j]),fill:"var(--fossil)"},gb));
+  for(const v of ticks(0,eMax,3)){if(v===0)continue;const t=el("text",{x:f.W-f.m.r+6,y:ye(v)+4},f.svg);t.textContent=v}
+  const y2=el("text",{x:f.W-10,y:f.m.t+f.ih*0.78,transform:`rotate(90 ${f.W-10} ${f.m.t+f.ih*0.78})`,"text-anchor":"middle"},f.svg);y2.textContent="GtC/yr";
+  axes(f,xs,ys,xd,yd,"CO₂ in the air (ppm)");
+  el("path",{d:"M"+years.map((y,j)=>`${xs(y).toFixed(1)},${ys(C[j]).toFixed(1)}`).join("L"),fill:"none",stroke:"var(--ocean)","stroke-width":2.5,"stroke-linejoin":"round"},f.svg);
+  D.mlo.forEach((v,i)=>{const y=D.mloY0+i;if(y>=start&&y<=end)el("circle",{cx:xs(y),cy:ys(v),r:2.6,fill:"var(--obs)"},f.svg)});
+  const lx=xs(end), lyM=ys(C[C.length-1]);
+  el("circle",{cx:lx,cy:lyM,r:4,fill:"var(--ocean)",stroke:"var(--panel)","stroke-width":1.5},f.svg);
+}
+
+$("bF").onclick=()=>{useLuc=false;$("bF").setAttribute("aria-pressed","true");$("bT").setAttribute("aria-pressed","false");drawHist()};
+$("bT").onclick=()=>{useLuc=true;$("bT").setAttribute("aria-pressed","true");$("bF").setAttribute("aria-pressed","false");drawHist()};
+["pSize","pT"].forEach(id=>$(id).addEventListener("input",drawPulse));
+["hScale","hStart","hEnd"].forEach(id=>$(id).addEventListener("input",drawHist));
+drawPulse(); drawHist();
+</script>
+</body></html>
