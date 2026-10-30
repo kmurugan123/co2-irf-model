@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
 <title>Carbon Impulse Model</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -61,6 +61,16 @@ a{color:var(--ocean)}
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .step{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;font-size:14px}
 .step b{display:block;font-family:var(--f-display);font-size:16px;margin-bottom:2px}
+.import{border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.import summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:14px}
+.import summary:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
+.import-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}
+.import-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px 22px}
+.import input[type=file],.import select,.import input[type=number]{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:6px;max-width:100%;min-width:0}
+.import code{font-family:var(--f-mono);font-size:12px}
+.btn{font:inherit;font-size:13px;margin-top:6px;padding:7px 10px;border-radius:6px;border:1px solid var(--ocean);background:transparent;color:var(--ocean);cursor:pointer;align-self:flex-start}
+.btn:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
+.msg{font-size:13px;color:var(--muted)} .msg.ok{color:var(--pass)} .msg.err{color:var(--fail)}
 .verdict{font-size:16px;font-weight:500;max-width:none}
 .verdict .hl{font-family:var(--f-mono)}
 </style>
@@ -109,12 +119,40 @@ a{color:var(--ocean)}
     <div class="ctl"><label for="hStart">Start year <output id="hStartOut"></output></label><input id="hStart" type="range" min="0" max="52" step="1" value="0"></div>
     <div class="ctl"><label for="hEnd">End year <output id="hEndOut"></output></label><input id="hEnd" type="range" min="1900" max="2024" step="1" value="2024"></div>
   </div>
+  <details class="import" id="importBox">
+    <summary>Use your own data</summary>
+    <div class="import-body">
+      <p class="small">Upload a CSV file (or a tab-separated text file). The page looks for a <b>year</b> or <b>date</b> column, plus a column of values. Monthly data is averaged into yearly values. Files stay in your browser and are not uploaded anywhere.</p>
+      <div class="import-grid">
+        <div class="ctl">
+          <label for="fObs">Measured CO₂ (ppm)</label>
+          <input id="fObs" type="file" accept=".csv,.txt,.tsv,text/csv,text/plain">
+          <span class="small">Example columns: <code>year, co2_ppm</code> or <code>date, co2</code>. A Scripps Mauna Loa CSV works too.</span>
+          <span class="msg" id="mObs" role="status">Using built-in Mauna Loa data (1959–2025).</span>
+        </div>
+        <div class="ctl">
+          <label for="fEm">Emissions per year</label>
+          <input id="fEm" type="file" accept=".csv,.txt,.tsv,text/csv,text/plain">
+          <span class="small">Example columns: <code>year, fossil, land_use</code>. The land-use column is optional. A full Our World in Data file works: the page uses the “World” rows.</span>
+          <label for="emUnit" style="margin-top:4px">Units</label>
+          <select id="emUnit"><option value="auto">Detect automatically</option><option value="gtc">GtC (billion tonnes carbon)</option><option value="gtco2">GtCO₂ (billion tonnes CO₂)</option><option value="mtco2">MtCO₂ (million tonnes CO₂)</option><option value="mtc">MtC (million tonnes carbon)</option></select>
+          <span class="msg" id="mEm" role="status">Using built-in Global Carbon Budget emissions (1850–2024).</span>
+        </div>
+        <div class="ctl">
+          <label for="cFirst">CO₂ in the first emissions year (ppm)</label>
+          <input id="cFirst" type="number" min="150" max="1000" step="0.1" value="285">
+          <span class="small">The model's starting point. Use 285 for 1850. If your emissions start in a different year, enter the CO₂ level for that year.</span>
+          <button id="bReset" type="button" class="btn">Go back to built-in data</button>
+        </div>
+      </div>
+    </div>
+  </details>
   <p class="verdict" id="hVerdict"></p>
   <div class="stats" id="hStats"></div>
   <div class="chart" id="hChart"></div>
   <div class="legend">
     <span><i class="sw" style="background:var(--ocean)"></i>Model prediction</span>
-    <span><i class="sw" style="background:var(--obs);border-radius:50%;width:8px;height:8px"></i>Measured at Mauna Loa</span>
+    <span><i class="sw" style="background:var(--obs);border-radius:50%;width:8px;height:8px"></i><span id="obsLegend">Measured at Mauna Loa</span></span>
     <span><i class="sw" style="background:var(--fossil);opacity:.55"></i>Carbon emitted per year (right axis)</span>
   </div>
 </section>
@@ -199,49 +237,61 @@ function drawPulse(){
 }
 
 /* ---------- Experiment 2: history ---------- */
-const START_OPTS=[1850].concat(Array.from({length:52},(_,i)=>1959+i)); // 1850, 1959..2010
 let useLuc=true;
-const N=D.fossil.length, YEARS=Array.from({length:N},(_,i)=>D.y0+i);
-const obsAt=y=>D.mlo[y-D.mloY0];
-const KERNEL=Array.from({length:N},(_,k)=>irf(k+0.5));
+// Active datasets (start with the built-in ones; the import panel can replace them)
+let EM={y0:D.y0,fossil:D.fossil.slice(),luc:D.luc.slice(),name:"Global Carbon Budget (built in)"};
+let OBS={map:new Map(D.mlo.map((v,i)=>[D.mloY0+i,v])),name:"Mauna Loa (built in)"};
+let C_FIRST=285;
+let N,YEARS,KERNEL,START_OPTS;
+const obsAt=y=>OBS.map.get(y);
+function rebuild(){
+  N=EM.fossil.length; YEARS=Array.from({length:N},(_,i)=>EM.y0+i);
+  KERNEL=Array.from({length:N},(_,k)=>irf(k+0.5));
+  const last=EM.y0+N-1;
+  START_OPTS=[EM.y0].concat([...OBS.map.keys()].filter(y=>y>EM.y0&&y<=last-10).sort((a,b)=>a-b));
+  const s=$("hStart"); s.max=START_OPTS.length-1; if(+s.value>+s.max)s.value=0;
+  const e=$("hEnd"); e.max=last; if(+e.value>last||+e.value<EM.y0+10)e.value=last;
+  $("obsLegend").textContent="Measured: "+OBS.name;
+}
 function runHist(start,scale,luc){
-  const i0=start-D.y0, C0=start===1850?C1850:obsAt(start);
-  const E=YEARS.slice(i0).map((_,j)=>scale*(D.fossil[i0+j]+(luc?D.luc[i0+j]:0)));
+  const i0=start-EM.y0, C0=start===EM.y0?C_FIRST:obsAt(start);
+  const E=YEARS.slice(i0).map((_,j)=>scale*(EM.fossil[i0+j]+(luc?EM.luc[i0+j]:0)));
   const C=E.map((_,j)=>{let s=0;for(let k=0;k<=j;k++)s+=E[k]*KERNEL[j-k];return C0+s/PPM});
   return {years:YEARS.slice(i0),E,C,C0};
 }
 function drawHist(){
   const start=START_OPTS[+$("hStart").value], scale=+$("hScale").value;
-  const endEl=$("hEnd"); endEl.min=Math.max(start+10,1900); if(+endEl.value<+endEl.min)endEl.value=endEl.min;
+  const endEl=$("hEnd"); endEl.min=start+10; if(+endEl.value<+endEl.min)endEl.value=endEl.min;
   const end=+endEl.value;
-  $("hStartOut").textContent=start===1850?"1850 (285 ppm)":`${start} (${obsAt(start)} ppm)`;
+  $("hStartOut").textContent=start===EM.y0?`${start} (${C_FIRST} ppm)`:`${start} (${obsAt(start).toFixed(1)} ppm)`;
   $("hScaleOut").textContent=scale===1?"real amount":Math.round(scale*100)+"% of real";
   $("hEndOut").textContent=end;
   const r=runHist(start,scale,useLuc);
   const idx=r.years.indexOf(end);
   const years=r.years.slice(0,idx+1), C=r.C.slice(0,idx+1), E=r.E.slice(0,idx+1);
-  const both=years.filter(y=>y>=D.mloY0&&y>start);
-  let sse=0,sb=0; both.forEach(y=>{const d=C[years.indexOf(y)]-obsAt(y);sse+=d*d;sb+=d});
+  const both=years.filter(y=>y>start&&obsAt(y)!=null);
+  let sb=0; both.forEach(y=>{sb+=C[years.indexOf(y)]-obsAt(y)});
   const n=both.length, cum=E.reduce((a,b)=>a+b,0);
-  const afM=(C[C.length-1]-r.C0)*PPM/cum;
-  const obsEnd=end>=D.mloY0?obsAt(end):null;
-  const afO=obsEnd!=null?(obsEnd-r.C0)*PPM/(cum/scale):null;
+  const afM=cum>0?(C[C.length-1]-r.C0)*PPM/cum:null;
+  const obsEnd=obsAt(end)??null;
+  const afO=obsEnd!=null&&cum>0?(obsEnd-r.C0)*PPM/(cum/scale):null;
   const diff=obsEnd!=null?C[C.length-1]-obsEnd:null;
+  const pct=v=>v==null||!isFinite(v)?"–":(v*100).toFixed(0)+"%";
   $("hStats").innerHTML=
     stat(`Model predicts for ${end}`,`${C[C.length-1].toFixed(1)} ppm`)+
-    stat(`Measured in ${end}`,obsEnd!=null?`${obsEnd.toFixed(1)} ppm`:"no data before 1959")+
+    stat(`Measured in ${end}`,obsEnd!=null?`${obsEnd.toFixed(1)} ppm`:"no measurement")+
     stat("Average miss, all years",n?`${sb/n>=0?"+":""}${(sb/n).toFixed(1)} ppm`:"–")+
-    stat("Share of emissions left in air: model / real",`${(afM*100).toFixed(0)}% / ${afO!=null?(afO*100).toFixed(0)+"%":"–"}`);
+    stat("Share of emissions left in air: model / real",`${pct(afM)} / ${pct(afO)}`);
   const V=$("hVerdict");
-  if(diff==null) V.textContent=`Measurements start in 1959, so move the end year to 1959 or later to compare.`;
+  if(diff==null) V.textContent=`There's no measurement for ${end}. Move the end year to a year that has measured data.`;
   else if(Math.abs(diff)<3) V.innerHTML=`In ${end} the model is within <span class="hl">${Math.abs(diff).toFixed(1)} ppm</span> of the measured value. That is a close match.`;
   else V.innerHTML=`In ${end} the model is <span class="hl">${Math.abs(diff).toFixed(1)} ppm too ${diff>0?"high":"low"}</span>. ${diff>0?"It leaves more CO₂ in the air than really stayed there.":"It leaves less CO₂ in the air than really stayed there."}`;
   const f=frame($("hChart"),900,380,{l:62,r:52,t:14,b:30});
-  const yObs=D.mlo.filter((_,i)=>D.mloY0+i<=end&&D.mloY0+i>=start);
+  const obsPts=[...OBS.map].filter(([y])=>y>=start&&y<=end);
+  const yObs=obsPts.map(p=>p[1]);
   const lo=Math.min(r.C0,...C,...yObs), hi=Math.max(...C,...yObs);
   const xd=[start,end], yd=[Math.floor((lo-5)/10)*10,Math.ceil((hi+5)/10)*10];
   const xs=v=>f.m.l+(v-xd[0])/(xd[1]-xd[0])*f.iw, ys=v=>f.m.t+f.ih-(v-yd[0])/(yd[1]-yd[0])*f.ih;
-  // emissions bars on right axis
   const eMax=Math.max(12,...E)*1.05, ye=v=>f.m.t+f.ih-v/eMax*f.ih*0.3;
   const bw=Math.max(1,f.iw/years.length*0.7);
   const gb=el("g",{opacity:.35},f.svg);
@@ -250,15 +300,100 @@ function drawHist(){
   const y2=el("text",{x:f.W-10,y:f.m.t+f.ih*0.78,transform:`rotate(90 ${f.W-10} ${f.m.t+f.ih*0.78})`,"text-anchor":"middle"},f.svg);y2.textContent="GtC/yr";
   axes(f,xs,ys,xd,yd,"CO₂ in the air (ppm)");
   el("path",{d:"M"+years.map((y,j)=>`${xs(y).toFixed(1)},${ys(C[j]).toFixed(1)}`).join("L"),fill:"none",stroke:"var(--ocean)","stroke-width":2.5,"stroke-linejoin":"round"},f.svg);
-  D.mlo.forEach((v,i)=>{const y=D.mloY0+i;if(y>=start&&y<=end)el("circle",{cx:xs(y),cy:ys(v),r:2.6,fill:"var(--obs)"},f.svg)});
-  const lx=xs(end), lyM=ys(C[C.length-1]);
-  el("circle",{cx:lx,cy:lyM,r:4,fill:"var(--ocean)",stroke:"var(--panel)","stroke-width":1.5},f.svg);
+  obsPts.forEach(([y,v])=>el("circle",{cx:xs(y),cy:ys(v),r:2.6,fill:"var(--obs)"},f.svg));
+  el("circle",{cx:xs(end),cy:ys(C[C.length-1]),r:4,fill:"var(--ocean)",stroke:"var(--panel)","stroke-width":1.5},f.svg);
 }
+
+/* ---------- Data import ---------- */
+function parseTable(text){
+  const lines=text.replace(/\r/g,"").split("\n").filter(l=>l.trim()&&!/^\s*[#%"]/.test(l));
+  const delim=["\t",";",","].reduce((b,d)=>(lines[0]||"").split(d).length>(lines[0]||"").split(b).length?d:b,",");
+  const rows=lines.map(l=>l.split(delim).map(c=>c.trim().replace(/^"|"$/g,"")));
+  const num=c=>c!==""&&isFinite(+c);
+  const hi=rows.findIndex(r=>r.some(c=>c&&!num(c)));       // first row with text = header
+  const header=hi>=0?rows[hi].map(h=>h.toLowerCase()):[];
+  const body=rows.slice(hi+1).filter(r=>r.some(num));
+  return {header,body};
+}
+function yearOf(row,header){
+  const yi=header.findIndex(h=>/^(year|yr)$/.test(h));
+  if(yi>=0&&num4(row[yi]))return Math.floor(+row[yi]);
+  const di=header.findIndex(h=>/date|time/.test(h));
+  if(di>=0){const m=String(row[di]).match(/(1[6-9]|20)\d\d/);if(m)return +m[0]}
+  const any=row.find(c=>/^(1[6-9]|20)\d\d(\.\d+)?$/.test(c));
+  return any?Math.floor(+any):null;
+}
+const num4=c=>c!==""&&isFinite(+c)&&+c>1500&&+c<2200;
+function pickCol(header,body,want,avoid){
+  let i=header.findIndex(h=>want.test(h)&&!avoid.test(h));
+  if(i<0)i=header.findIndex((h,k)=>!/year|yr|month|mn|date|time|day|decimal|country|entity|code|iso/.test(h)&&body.some(r=>isFinite(+r[k])&&r[k]!==""));
+  return i;
+}
+function filterWorld(t){
+  const ci=t.header.findIndex(h=>/^(country|entity|region|name)$/.test(h));
+  if(ci<0)return t;
+  const w=t.body.filter(r=>/^world$/i.test(r[ci]));
+  return w.length?{header:t.header,body:w}:t;
+}
+function importObs(text,name){
+  const t=parseTable(text);
+  const vi=pickCol(t.header,t.body,/co2|ppm|mean|average|value|concentration/,/season|adjust|fit|fill|unc|std|sd|trend|deseason|num|count|days/);
+  if(vi<0)throw new Error("I couldn't find a column of CO₂ values. Name it co2 or ppm.");
+  const acc=new Map();
+  for(const r of t.body){const y=yearOf(r,t.header),v=+r[vi];if(y==null||!(v>150&&v<1500))continue;const a=acc.get(y)||[0,0];a[0]+=v;a[1]++;acc.set(y,a)}
+  const months=[...acc.values()].some(a=>a[1]>1);
+  const map=new Map([...acc].filter(([,a])=>!months||a[1]>=6).map(([y,a])=>[y,a[0]/a[1]]).sort((a,b)=>a[0]-b[0]));
+  if(map.size<3)throw new Error("I found fewer than 3 years of usable CO₂ values. Check that the file has a year (or date) column and a CO₂ column in ppm.");
+  OBS={map,name};
+  const ys=[...map.keys()];
+  return `Loaded ${map.size} years of CO₂ (${ys[0]}–${ys[ys.length-1]})${months?", averaged from monthly values; years with fewer than 6 months skipped":""}. Using column “${t.header[vi]||"#"+(vi+1)}”.`;
+}
+const TO_GTC={gtc:1,mtco2:12/44/1000,gtco2:12/44,mtc:1/1000};
+function importEm(text,name,unitSel){
+  const t=filterWorld(parseTable(text));
+  const AV=/cumul|per_|capita|share|growth|percent|pct|including|incl|luc_incl|gdp|pop/;
+  const fi=pickCol(t.header,t.body,/fossil|^co2$|emission|coal|total/,new RegExp("land|luc|"+AV.source));
+  const li=t.header.findIndex(h=>/land|luc/.test(h)&&!AV.test(h));
+  if(fi<0)throw new Error("I couldn't find an emissions column. Name it fossil or co2.");
+  const byYear=new Map();
+  for(const r of t.body){const y=yearOf(r,t.header),f=+r[fi];if(y==null||!isFinite(f)||r[fi]==="")continue;byYear.set(y,[f,li>=0&&r[li]!==""&&isFinite(+r[li])?+r[li]:0])}
+  const ys=[...byYear.keys()].sort((a,b)=>a-b);
+  if(ys.length<20)throw new Error("Emissions need at least 20 years of data.");
+  let unit=unitSel; const mx=Math.max(...ys.map(y=>byYear.get(y)[0]));
+  if(unit==="auto")unit=mx>500?"mtco2":mx>15?"gtco2":"gtc";
+  const k=TO_GTC[unit], y0=ys[0], yN=ys[ys.length-1], fossil=[], luc=[];
+  for(let y=y0;y<=yN;y++){ // fill any gaps by linear interpolation
+    if(byYear.has(y)){const [f,l]=byYear.get(y);fossil.push(f*k);luc.push(l*k);continue}
+    const a=ys.filter(v=>v<y).pop(), b=ys.find(v=>v>y), w=(y-a)/(b-a), A=byYear.get(a), B=byYear.get(b);
+    fossil.push((A[0]+w*(B[0]-A[0]))*k); luc.push((A[1]+w*(B[1]-A[1]))*k);
+  }
+  EM={y0,fossil,luc,name};
+  const names={gtc:"GtC",mtco2:"MtCO₂",gtco2:"GtCO₂",mtc:"MtC"};
+  return `Loaded ${fossil.length} years of emissions (${y0}–${yN}) in ${names[unit]}${unitSel==="auto"?" (detected)":""}. Fuel: “${t.header[fi]||"#"+(fi+1)}”. ${li>=0?`Forests/land: “${t.header[li]}”.`:"No land-use column found, so “Fuel + forests” equals “Fuel only”."}${y0!==1850?` Your data starts in ${y0}, so set the starting CO₂ for ${y0} below.`:""}`;
+}
+function setMsg(id,text,ok){const m=$(id);m.textContent=text;m.className="msg "+(ok?"ok":"err")}
+function readFile(input,cb){const file=input.files[0];if(!file)return;const fr=new FileReader();fr.onload=()=>cb(String(fr.result),file.name);fr.readAsText(file)}
+let lastEmText=null,lastEmName=null;
+$("fObs").addEventListener("change",e=>readFile(e.target,(txt,name)=>{
+  try{setMsg("mObs",importObs(txt,name),true);rebuild();
+    const lastObs=Math.max(...OBS.map.keys()), lastEm=EM.y0+EM.fossil.length-1;
+    $("hEnd").value=Math.min(lastObs,lastEm);drawHist()}catch(err){setMsg("mObs",err.message,false)}}));
+function loadEm(){try{setMsg("mEm",importEm(lastEmText,lastEmName,$("emUnit").value),true);rebuild();drawHist()}catch(err){setMsg("mEm",err.message,false)}}
+$("fEm").addEventListener("change",e=>readFile(e.target,(txt,name)=>{lastEmText=txt;lastEmName=name;loadEm()}));
+$("emUnit").addEventListener("change",()=>{if(lastEmText)loadEm()});
+$("cFirst").addEventListener("input",e=>{const v=+e.target.value;if(v>150&&v<1000){C_FIRST=v;drawHist()}});
+$("bReset").onclick=()=>{
+  EM={y0:D.y0,fossil:D.fossil.slice(),luc:D.luc.slice(),name:"Global Carbon Budget (built in)"};
+  OBS={map:new Map(D.mlo.map((v,i)=>[D.mloY0+i,v])),name:"Mauna Loa (built in)"};
+  C_FIRST=285;$("cFirst").value=285;$("fObs").value="";$("fEm").value="";$("emUnit").value="auto";lastEmText=null;
+  $("mObs").textContent="Using built-in Mauna Loa data (1959–2025).";$("mObs").className="msg";
+  $("mEm").textContent="Using built-in Global Carbon Budget emissions (1850–2024).";$("mEm").className="msg";
+  $("hStart").value=0;$("hEnd").value=2024;rebuild();drawHist()};
 
 $("bF").onclick=()=>{useLuc=false;$("bF").setAttribute("aria-pressed","true");$("bT").setAttribute("aria-pressed","false");drawHist()};
 $("bT").onclick=()=>{useLuc=true;$("bT").setAttribute("aria-pressed","true");$("bF").setAttribute("aria-pressed","false");drawHist()};
 ["pSize","pT"].forEach(id=>$(id).addEventListener("input",drawPulse));
 ["hScale","hStart","hEnd"].forEach(id=>$(id).addEventListener("input",drawHist));
-drawPulse(); drawHist();
+rebuild(); drawPulse(); drawHist();
 </script>
 </body></html>
