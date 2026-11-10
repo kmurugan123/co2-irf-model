@@ -180,12 +180,217 @@ print(f"Test 2 model minus observed: 1959 {off[1959]:+.1f} ppm, 2024 {off[2024]:
 
 md("""Most of the model's remaining offset (about +12 ppm) builds up before 1959, when the budget's own imbalance is largest (about 21 ppm). Ice-core CO₂ even levelled off in the 1940s while emissions kept rising. The early land-use emissions are the least certain input, which makes them the most likely cause.
 
-## 7. Limitations
+## 7. Limitations of the two-layer model
+
+Sections 8–10 deal with the first item and the last one.
 
 - **Two-layer ocean.** One mixing rate can't match both the 1994 inventory and the recent sink: with k_d set from the inventory, the 2015–2024 sink is about 3.9 GtC/yr against the GCB's 3.2 ± 0.4. A real ocean has a gradual thermocline, not two layers.
 - **Ocean chemistry.** The model's Revelle factor in 2000 is about 17. That is high compared with the roughly 11 implied by [Jiang et al. (2019)](https://www.nature.com/articles/s41598-019-55039-4), whose RCP8.5 projection has it rising by 3.7 (about 34%) after 2000. The cause is BEAM's 10 °C constants and fixed alkalinity.
 - **Simple land.** A single fertilization factor, with no temperature or nitrogen limits, and an approximate turnover time.
 - **No climate feedback.** Warming that reduces ocean and land uptake isn't included.""")
+
+md("""## 8. Fix 1: a three-layer ocean
+
+The two-layer failure in Section 7 is structural. One mixing rate either fills the ocean fast enough to match the 1994 inventory, or slowly enough to match today's sink, but not both. A real ocean has a **thermocline**, a middle layer down to about 1,000 m that is ventilated within decades, above a deep ocean that turns over in centuries.
+
+Split BEAM's deep box by depth, using a mean ocean depth of about 3,700 m:
+
+| Layer | Depth | Volume (surface units) | Exchange |
+|---|---|---|---|
+| Surface | 0–75 m | 1 | air–sea, k_a = 0.2 /yr (BEAM) |
+| Thermocline | 75–1,000 m | 12.5 | k_1 with the surface |
+| Deep | below 1,000 m | 37.5 | k_2 with the thermocline |
+
+**Both rates come from ocean observations, never from the CO₂ record:**
+
+- **k_2** comes from the radiocarbon age of deep water. [Matsumoto (2007)](https://www.whoi.edu/cms/files/Matsumoto_2007_282004.pdf) measured circulation ages below 1,500 m of about 300 years (Atlantic) to 900 years (Pacific). In the model, the deep water's mean age is V_deep / (k_2 V_thermocline) = 3 / k_2. The midpoint of 600 years gives k_2 = 0.005 per year.
+- **k_1** comes from the 1994 ocean inventory, as in Test 2.
+
+The test is whether this predicts the 2015–2024 ocean sink, which the two-layer model missed.""")
+
+code("""from ocean3 import simulate, pulse3
+from experiments3 import central_params, summarise, monte_carlo, interval, future_emissions, EF, EL, OBS, START, DEEP_AGE
+c3 = central_params()
+print(f"k_2 = {c3['k2m']:.4f}/yr from a {c3['deep_age']:.0f}-yr deep-water age; k_1 = {c3['k1m']:.2f}/yr from 118 GtC by 1994; beta = {c3['beta']:.3f}")
+kw3 = dict(k1m=c3["k1m"], k2m=c3["k2m"], beta=c3["beta"], start_ppm=START)
+r3 = simulate(EF, EL, **kw3)
+s3 = summarise(r3)
+bg3 = simulate(EF[:161], EL[:161], prescribed=OBS[:161], **kw3)
+pl3 = pulse3(bg3["final"], k1m=c3["k1m"], k2m=c3["k2m"], beta=c3["beta"])
+cmp = pd.DataFrame({
+    "published": ["3.22 ± 0.4", "25 ± 9%", "59 ± 12%", "16 ± 14%", "0.11 ± 0.03", "424.6"],
+    "two layers (Test 2)": [f"{con['ocean_sink_2015_2024']:.2f}", f"{con['pulse_atm_1000']:.0%}", f"{con['pulse_ocean_1000']:.0%}",
+                            f"{con['pulse_land_1000']:.0%}", f"{con['ph_drop_1850_2000']:.3f}", f"{con['ppm_2024']:.1f}"],
+    "three layers": [f"{s3['ocean_2015_2024'].item():.2f}", f"{pl3['atm'][-1]:.0%}", f"{pl3['ocean'][-1]:.0%}",
+                     f"{pl3['land'][-1]:.0%}", f"{s3['pH_drop_1850_2000'].item():.3f}", f"{s3['ppm_2024'].item():.1f}"]},
+    index=["Ocean sink 2015-2024 (GtC/yr)", "Pulse airborne, 1000 yr", "Pulse in ocean, 1000 yr", "Pulse on land, 1000 yr",
+           "Surface pH drop 1850-2000", "CO2 in 2024 (ppm)"])
+cmp""")
+
+code("""fig, ax = plt.subplots()
+ax.plot(g.loc[1959:2024].index, g.loc[1959:2024, "ocean_sink"], color="k", lw=1, label="GCB 2025")
+ax.plot(yrs, con["run"]["ocean_sink"], color="#0f6b7c", lw=2, alpha=.5, ls="--", label="two layers")
+ax.plot(yrs, r3["ocean"][:, 0], color="#0f6b7c", lw=2.5, label="three layers")
+ax.axhspan(3.22 - .4, 3.22 + .4, xmin=0.94, color="#b7791f", alpha=.25)
+ax.set(xlabel="year", ylabel="GtC per year", xlim=(1900, 2025), title="The thermocline fixes the recent ocean sink")
+ax.legend(); plt.tight_layout(); plt.show()""")
+
+md("""**Result.** With a thermocline, the ocean now passes both checks: 118 GtC by 1994 (used to set k_1) and the 2015–2024 sink (a prediction, inside 3.22 ± 0.4). The pulse test still passes.
+
+The atmosphere moves the other way, from +5 to about +11 ppm in 2024. The three-layer ocean takes up less in recent decades, which is what the Global Carbon Budget measures. The two-layer model's closer CO₂ match therefore came partly from an ocean that was too strong. The remaining gap is about a third of the GCB's own 38 ppm budget imbalance.""")
+
+md("""## 9. Fix 2: warming feedback
+
+Warmer water holds less CO₂, and its carbonate chemistry shifts. Warming is computed from cumulative emissions with the IPCC AR6 **TCRE** (transient climate response to cumulative emissions): **1.4–2.2 °C per 1,000 GtC** (likely range), with the midpoint of 1.8 used here. The ocean chemistry constants (k₁, k₂, solubility) are then re-evaluated every time step at 10 °C + ΔT, using the same Glotter et al. formulas tested in Section 1.
+
+Two simplifications are made. The surface ocean warms as much as the global average, which is an upper bound, since sea-surface warming is smaller. And the rates are kept from Section 8, so this measures the size of the feedback alone.""")
+
+code("""r3f = simulate(EF, EL, feedback=True, **kw3)
+s3f = summarise(r3f)
+print(f"Warming by 2024 from cumulative emissions: {s3f['dT_2024'].item():.2f} C (WMO State of the Global Climate 2024: long-term warming 1.34-1.41 C above 1850-1900)")
+print(f"CO2 in 2024: {s3['ppm_2024'].item():.1f} ppm without feedback, {s3f['ppm_2024'].item():.1f} ppm with  (+{(s3f['ppm_2024']-s3['ppm_2024']).item():.1f} ppm)")
+print(f"Ocean sink 2015-2024: {s3['ocean_2015_2024'].item():.2f} -> {s3f['ocean_2015_2024'].item():.2f} GtC/yr")
+Ef2, El2, y2 = future_emissions(0.0)
+a = simulate(Ef2, El2, **kw3); b = simulate(Ef2, El2, feedback=True, **kw3)
+print(f"If emissions stay at the 2024 level to 2100: {a['ppm'][-1].item():.0f} ppm without feedback, {b['ppm'][-1].item():.0f} ppm with (+{(b['ppm'][-1]-a['ppm'][-1]).item():.0f}); warming {b['dT'][-1].item():.1f} C")
+fig, ax = plt.subplots()
+ax.plot(y2, a["ppm"][:, 0], color="#0f6b7c", lw=2, label="no feedback")
+ax.plot(y2, b["ppm"][:, 0], color="#b23b3b", lw=2, label="with warming feedback")
+ax.plot(mlo.index, mlo.values, "k.", ms=3, label="Mauna Loa")
+ax.axvline(2024, color="#999", lw=1, ls=":")
+ax.set(xlabel="year", ylabel="CO₂ (ppm)", title="Emissions held at the 2024 level: the feedback grows with warming"); ax.legend()
+plt.tight_layout(); plt.show()""")
+
+md("""## 10. Uncertainty: Monte Carlo
+
+Every uncertain input is drawn at random from its published range, 2,000 times. Each draw then sets its own rates from *its* ocean and land data, never from the CO₂ record, and runs 1850–2024.
+
+| Input | Distribution | Source |
+|---|---|---|
+| Land-use emissions | × N(1, 0.5) | GCB 2025: 1.4 ± 0.7 GtC/yr |
+| Fossil emissions | × N(1, 0.05) | GCB 2025: 10.3 ± 0.5 GtC/yr |
+| Ocean inventory 1994 → k_1 | N(118, 19) GtC | Sabine et al. 2004 |
+| Deep-water age → k_2 | uniform 300–900 yr | Matsumoto 2007 |
+| Land sink 1960–1999 → β | N(1.47, 0.8) GtC/yr | GCB 2025 land-sink uncertainty |
+| TCRE (feedback runs) | uniform 1.4–2.2 °C/1000 GtC | IPCC AR6 |
+
+About 8% of draws ask for more ocean uptake than any k_1 can give, so they use the fully mixed limit, k_1 = 10 per year.""")
+
+code("""mc, draws = monte_carlo(2000)
+mcf, drawsf = monte_carlo(2000, feedback=True)
+sm, smf = summarise(mc), summarise(mcf)
+rows = []
+for name, s in [("no feedback", sm), ("with warming feedback", smf)]:
+    lo, mid, hi = interval(s["ppm_2024"])
+    rows.append({"runs": name, "CO2 2024, 5%": lo, "median": mid, "95%": hi,
+                 "share of runs below 424.6 ppm": (s["ppm_2024"] < 424.61).mean()})
+display(pd.DataFrame(rows).set_index("runs").round(2))
+fig, ax = plt.subplots()
+for runs, col, lab in [(mc, "#0f6b7c", "90% range, no feedback"), (mcf, "#b23b3b", "90% range, with feedback")]:
+    ax.fill_between(yrs, np.percentile(runs["ppm"], 5, axis=1), np.percentile(runs["ppm"], 95, axis=1), color=col, alpha=.18, label=lab)
+    ax.plot(yrs, np.percentile(runs["ppm"], 50, axis=1), color=col, lw=1.5)
+ax.plot(obs.loc[:1958].index, obs.loc[:1958].values, color="#666", lw=1.5, label="ice core")
+ax.plot(mlo.index, mlo.values, "k.", ms=3, label="Mauna Loa")
+ax.set(xlabel="year", ylabel="CO₂ (ppm)", xlim=(1900, 2025), ylim=(280, 530), title="2,000 runs: the measured record sits inside the model's uncertainty")
+ax.legend(fontsize=8); plt.tight_layout(); plt.show()""")
+
+code("""corr = pd.Series({c: np.corrcoef(draws[c], sm["ppm_2024"])[0, 1] for c in
+                   ["f_luc", "land_target", "f_fossil", "inventory", "deep_age"]}).rename(
+    {"f_luc": "land-use emissions", "land_target": "land sink 1960-1999", "f_fossil": "fossil emissions",
+     "inventory": "ocean inventory 1994", "deep_age": "deep-water age"})
+ax = corr.sort_values().plot.barh(color="#4f9fb0", figsize=(7, 3)); ax.axvline(0, color="k", lw=.8)
+ax.set(xlabel="correlation with predicted 2024 CO₂", title="Which uncertainty matters most"); plt.tight_layout(); plt.show()
+corr.round(2)""")
+
+md("""**Result.** The model's 90% range for 2024 is wide, roughly 390–500 ppm, and the measured 424.6 ppm falls well inside it. Two inputs dominate the spread: **land-use emissions** and the **land sink**. The ocean parameters matter much less.
+
+So the main limit on predicting today's CO₂ from emissions isn't the ocean physics. It's how poorly we know what land clearing emits and what forests absorb. That is the same land uncertainty behind the Global Carbon Budget's own budget imbalance.
+
+## 11. Updated summary
+
+| Question | Answer |
+|---|---|
+| Does a model built from physics pass the Joos pulse test? | Yes, with two layers or three |
+| Can it match both the ocean's long-term inventory and today's sink? | Only with a thermocline, which needs three layers |
+| How much does ocean warming feedback add? | About +7 ppm by 2024, and more under continued emissions |
+| Is the measured CO₂ consistent with the model, given published uncertainties? | Yes. 424.6 ppm sits at about the 38th percentile of 2,000 runs (30th with the feedback). Land uncertainty sets the range. |""")
+
+md("""## 12. Future scenarios to 2100
+
+The Test 3 model (three layers, warming feedback on) is run under four emissions paths after 2024. Fossil and land-use emissions follow the same path:
+
+| Scenario | Emissions after 2024 |
+|---|---|
+| Held flat | Stay at the 2024 level |
+| Cut 2% per year | Fall 2% each year (about 21% of today by 2100) |
+| Net zero by 2050 | Straight-line decline to zero in 2050, then zero |
+| Stop in 2025 | Zero from 2025 |
+
+Each scenario is also run 2,000 times with the Monte Carlo draws from Section 10. **Caveat:** every run starts from the model's own 2024 state, which is about 18 ppm above Mauna Loa with the feedback on. The *differences* between scenarios are more reliable than the absolute values.""")
+
+code("""from experiments3 import run_scenarios, scenario_emissions, stop_today, SCENARIOS
+table_fb, runs_fb = run_scenarios(2000, feedback=True)
+table_nofb, _ = run_scenarios(2000, feedback=False)
+display(table_fb.round(1))
+fig, ax = plt.subplots(figsize=(9, 4.6))
+cols = {"flat": "#b23b3b", "cut2": "#b7791f", "netzero2050": "#0f6b7c", "stop": "#5d7f3a"}
+for k, v in runs_fb.items():
+    y, mc = v["years"], v["mc"]["ppm"]; m = y >= 2024
+    ax.fill_between(y[m], np.percentile(mc, 5, axis=1)[m], np.percentile(mc, 95, axis=1)[m], color=cols[k], alpha=.12)
+    ax.plot(y, v["central"]["ppm"][:, 0], color=cols[k], lw=2.2, label=SCENARIOS[k])
+    py, pv = y[np.argmax(v["central"]["ppm"][:, 0])], v["central"]["ppm"][:, 0].max()
+    if k in ("netzero2050",): ax.plot(py, pv, "o", color=cols[k]); ax.annotate(f"peak {pv:.0f} ppm, {py}", (py, pv), textcoords="offset points", xytext=(6, 8), fontsize=9)
+ax.plot(mlo.index, mlo.values, "k.", ms=2.5, label="Mauna Loa")
+ax.set(xlim=(1950, 2100), xlabel="year", ylabel="CO₂ (ppm)", title="Only cutting emissions to zero makes CO₂ peak this century")
+ax.legend(fontsize=8, loc="upper left"); plt.tight_layout(); plt.show()""")
+
+code("""eff = pd.DataFrame({"no feedback": table_nofb["CO2 2100"], "with feedback": table_fb["CO2 2100"]})
+eff["feedback adds (ppm)"] = eff["with feedback"] - eff["no feedback"]
+eff.round(1)""")
+
+md("""**Results** (central run, with the feedback on; 90% ranges are in the table):
+
+- **Held flat:** CO₂ never peaks before 2100. It reaches about 630 ppm, with about 2.9 °C of warming.
+- **Cut 2% per year:** CO₂ still rises through 2100, but more slowly, to about 500 ppm.
+- **Net zero by 2050:** CO₂ peaks around **2039**, about 15 years before emissions reach zero. Once emissions fall below what the ocean and land absorb, CO₂ starts dropping. Across all 2,000 runs, the peak year falls between 2036 and 2044.
+- **The feedback** adds the most where emissions continue (about +18 ppm by 2100 when held flat) and the least where they stop.""")
+
+md("""## 13. What if all emissions stopped in 2025?
+
+The run continues for 500 years after emissions stop.""")
+
+code("""res, ys, rs = stop_today(feedback=True)
+res0, _, rs0 = stop_today(feedback=False)
+show = pd.DataFrame({"with feedback": res, "no feedback": res0}).T.drop(columns=["year excess above 1850 halves"])
+display(show)
+p = rs["ppm"][:, 0]; i24 = np.where(ys == 2024)[0][0]
+# the old curve fit, for comparison: Joos IRF convolution of the same emissions
+a = [0.2173, 0.2240, 0.2824, 0.2763]; tau = [394.4, 36.54, 4.304]
+irf = lambda t: a[0] + sum(a[i + 1] * np.exp(-t / tau[i]) for i in range(3))
+Ef, El, yy = scenario_emissions("stop", end=2524); E = Ef + El
+C_irf = START + np.convolve(E, irf(np.arange(len(E)) + 0.5))[:len(E)] / GTC_PER_PPM
+fig, axs = plt.subplots(1, 2, figsize=(11, 4))
+axs[0].plot(ys, p - p[i24], color="#0f6b7c", lw=2.5, label="box model (Test 3)")
+axs[0].plot(yy, C_irf - C_irf[i24], color="#888", lw=2, ls="--", label="old IRF curve fit")
+axs[0].set(xlim=(2024, 2524), xlabel="year", ylabel="change since 2024 (ppm)", title="CO₂ after emissions stop"); axs[0].legend()
+axs[1].plot(ys, rs["ocean"][:, 0], color="#0f6b7c", lw=2, label="ocean uptake")
+axs[1].plot(ys, rs["land"][:, 0], color="#5d7f3a", lw=2, label="land uptake")
+axs[1].axhline(0, color="k", lw=.8)
+axs[1].set(xlim=(2015, 2224), xlabel="year", ylabel="GtC per year", title="The land turns into a small source"); axs[1].legend()
+plt.tight_layout(); plt.show()
+for y in (2025, 2034, 2074, 2124, 2524):
+    j = np.where(ys == y)[0][0]
+    print(f"{y}: box model {p[j]-p[i24]:+6.1f} ppm   IRF {C_irf[j]-C_irf[i24]:+6.1f} ppm")""")
+
+md("""**Results.**
+
+- **Fast at first.** CO₂ falls about 2.7 ppm in the first year and about 18 ppm in the first decade, because the ocean and land keep absorbing at nearly today's rate.
+- **Then it slows sharply.** It falls only about 42 ppm in 100 years and 67 ppm in 500. About **70% of the rise above 1850 is still there after a century, and over half after 500 years.**
+- **Why it slows.** Two mechanisms, which the old curve fit doesn't have:
+    1. **Land turns into a source.** As CO₂ falls, the fertilization boost fades. Soils keep releasing the carbon built up over the last century, so land uptake goes slightly negative within a few decades.
+    2. **The ocean hits a bottleneck.** The surface and thermocline fill up, and the deep ocean only takes carbon on its roughly 600-year mixing time.
+- **Comparison with the IRF.** The old IRF also predicts a decline, since it's a sum of decaying exponentials. Its long-term drop is larger, though, and it can't say *why*, or show the land switching from sink to source.
+- **Warming.** With TCRE, warming stops rising once emissions stop: it stays at about 1.3 °C. That matches the IPCC's finding that the zero-emissions commitment is close to zero.""")
 
 nb = nbf.v4.new_notebook(); nb["cells"] = C
 nbf.write(nb, "carbon_box_model.ipynb")

@@ -32,12 +32,14 @@ section.card{background:var(--panel);border:1px solid var(--rule);border-radius:
 .btn[aria-pressed=true]{background:var(--ocean);color:var(--panel)}
 .btn:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--ocean);outline-offset:2px}
 .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px 22px}
+[hidden]{display:none!important}
 .ctl{display:flex;flex-direction:column;gap:3px;min-width:0}
 .ctl label{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
 .ctl output{font-family:var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
 .ctl .hint{font-size:12px;color:var(--muted)}
 input[type=range]{width:100%;accent-color:var(--ocean)}
 .group-title{font-weight:600;font-size:13px;grid-column:1/-1;border-top:1px solid var(--rule);padding-top:10px}
+.sel{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:6px;max-width:100%}
 .seg{display:flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
 .seg button{flex:1;font:inherit;font-size:13px;padding:6px 8px;border:0;background:transparent;color:var(--ink);cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--ocean);color:var(--panel)}
@@ -77,7 +79,8 @@ code{font-family:var(--f-mono);font-size:12.5px}
   <p>This model follows carbon between four boxes: the air, the surface ocean, the deep ocean and land plants. Every flow follows a physical rule, such as ocean chemistry, mixing or plant growth. Nothing is fitted to the measured CO₂, so the CO₂ record is a fair test of the model.</p>
   <div class="presets" role="group" aria-label="Parameter sets">
     <button class="btn" id="pLit" type="button" aria-pressed="false">Test 1: rates from the 1959 literature</button>
-    <button class="btn" id="pCon" type="button" aria-pressed="true">Test 2: rates set from ocean and land data</button>
+    <button class="btn" id="pCon" type="button" aria-pressed="false">Test 2: rates set from ocean and land data</button>
+    <button class="btn" id="pT3" type="button" aria-pressed="true">Test 3: three-layer ocean</button>
   </div>
   <p class="small" id="presetNote"></p>
 </header>
@@ -93,14 +96,27 @@ code{font-family:var(--f-mono);font-size:12.5px}
   <h2 id="h-controls">Change the physics or the emissions</h2>
   <div class="controls">
     <div class="group-title">Physical rates</div>
-    <div class="ctl"><label for="kd">Deep-ocean mixing k_d <output id="kdOut"></output></label><input id="kd" type="range" min="0.02" max="1" step="0.002" value="0.334"><span class="hint">How fast the surface ocean hands carbon to the deep ocean.</span></div>
+    <div class="ctl"><label>Ocean layers</label><div class="seg" role="group" aria-label="Ocean layers"><button id="bL2" type="button" aria-pressed="false">2: surface + deep</button><button id="bL3" type="button" aria-pressed="true">3: + thermocline</button></div></div>
+    <div class="ctl" id="ctlKd" hidden><label for="kd">Deep-ocean mixing k_d <output id="kdOut"></output></label><input id="kd" type="range" min="0.02" max="1" step="0.002" value="0.334"><span class="hint">How fast the surface ocean hands carbon to the deep ocean.</span></div>
+    <div class="ctl" id="ctlK1"><label for="k1m">Surface–thermocline mixing k_1 <output id="k1Out"></output></label><input id="k1m" type="range" min="0.05" max="10" step="0.001" value="1.104"><span class="hint">Set from the ocean's carbon gain by 1994 (Sabine et al. 2004).</span></div>
+    <div class="ctl" id="ctlK2"><label for="age">Deep-water age (sets k_2) <output id="ageOut"></output></label><input id="age" type="range" min="100" max="2000" step="10" value="600"><span class="hint">Radiocarbon age below 1,500 m is about 300–900 years (Matsumoto 2007).</span></div>
     <div class="ctl"><label for="beta">Plant fertilization β <output id="betaOut"></output></label><input id="beta" type="range" min="0" max="0.8" step="0.005" value="0.345"><span class="hint">How much faster plants grow as CO₂ rises.</span></div>
     <div class="ctl"><label for="ka">Air–sea exchange k_a <output id="kaOut"></output></label><input id="ka" type="range" min="0.05" max="2" step="0.05" value="0.2"><span class="hint">How fast the surface ocean catches up with the air.</span></div>
     <div class="ctl"><label for="temp">Ocean chemistry temperature <output id="tempOut"></output></label><input id="temp" type="range" min="5" max="25" step="1" value="10"><span class="hint">Sets the chemical constants. The model's default is 10 °C.</span></div>
+    <div class="group-title">Warming feedback</div>
+    <div class="ctl"><label>Warmer ocean holds less CO₂</label><div class="seg" role="group" aria-label="Warming feedback"><button id="bFB0" type="button" aria-pressed="true">Off</button><button id="bFB1" type="button" aria-pressed="false">On</button></div></div>
+    <div class="ctl"><label for="tcre">Warming per 1000 GtC (TCRE) <output id="tcreOut"></output></label><input id="tcre" type="range" min="1.0" max="2.6" step="0.1" value="1.8"><span class="hint">IPCC AR6 likely range is 1.4–2.2 °C.</span></div>
     <div class="group-title">Emissions</div>
     <div class="ctl"><label>Emissions included</label><div class="seg" role="group" aria-label="Emissions included"><button id="bF" type="button" aria-pressed="false">Fuel only</button><button id="bT" type="button" aria-pressed="true">Fuel + land use</button></div></div>
     <div class="ctl"><label for="scale">Scale all emissions <output id="scaleOut"></output></label><input id="scale" type="range" min="0" max="2" step="0.05" value="1"></div>
-    <div class="ctl"><label for="future">After 2024, emissions change by <output id="futureOut"></output></label><input id="future" type="range" min="-10" max="3" step="0.5" value="0"><span class="hint">Extends the run to 2100.</span></div>
+    <div class="ctl"><label for="scen">After 2024</label><select id="scen" class="sel">
+      <option value="none">History only (to 2024)</option>
+      <option value="flat">Emissions held at the 2024 level</option>
+      <option value="cut2">Emissions cut 2% per year</option>
+      <option value="netzero2050">Net zero by 2050</option>
+      <option value="stop">All emissions stop in 2025</option>
+      <option value="custom">Custom yearly change</option></select><span class="hint">Scenarios run to 2100.</span></div>
+    <div class="ctl" id="ctlFuture" hidden><label for="future">Emissions change per year <output id="futureOut"></output></label><input id="future" type="range" min="-10" max="3" step="0.5" value="0"></div>
     <div class="ctl"><label for="endYear">Show up to <output id="endOut"></output></label><input id="endYear" type="range" min="1900" max="2100" step="1" value="2024"></div>
   </div>
 </section>
@@ -115,7 +131,9 @@ code{font-family:var(--f-mono);font-size:12.5px}
     <span><i class="sw" style="background:var(--muted)"></i>Ice core, 1850–1958</span>
     <span><i class="dot" style="background:var(--obs)"></i><span id="obsLegend">Mauna Loa</span></span>
     <span><i class="dot" style="background:var(--fossil)"></i>NOAA global mean</span>
+    <span id="mcLegend"><i class="sw" style="background:var(--band)"></i>Monte Carlo 90% range (2,000 runs)</span>
   </div>
+  <p class="small" id="mcNote"></p>
   <details class="import" id="importBox">
     <summary>Compare with your own CO₂ data</summary>
     <div class="import-body">
@@ -125,6 +143,14 @@ code{font-family:var(--f-mono);font-size:12.5px}
       <button id="bReset" class="btn" type="button" style="align-self:flex-start">Go back to Mauna Loa</button>
     </div>
   </details>
+</section>
+
+<section class="card" aria-labelledby="h-scen">
+  <span class="eyebrow">Future scenarios · Test 3 rates · 2,000 Monte Carlo runs each</span>
+  <h2 id="h-scen">When does CO₂ peak?</h2>
+  <p class="small">Each scenario starts from the model's own 2024 state, which is about 11 ppm above Mauna Loa (18 ppm with the feedback on). Compare <b>changes</b> between scenarios rather than exact values. Ranges are 5–95% of 2,000 runs. Pick a scenario above to see it on the chart.</p>
+  <div class="tablewrap"><table><thead><tr><th>Scenario</th><th>Peak CO₂ (ppm)</th><th>Peak year</th><th>CO₂ in 2100 (ppm)</th><th>Warming in 2100</th></tr></thead><tbody id="scenRows"></tbody></table></div>
+  <p class="small" id="stopNote"></p>
 </section>
 
 <section class="card" aria-labelledby="h-sinks">
@@ -164,14 +190,16 @@ code{font-family:var(--f-mono);font-size:12.5px}
       <li><b>Test 1 (1959 rates)</b> passes the pulse test, but overshoots 2024 CO₂ by 48 ppm. Its ocean takes up about a third of the measured amount.</li>
       <li>Changing one rate at a time shows that <b>deep-ocean mixing</b> controls ocean uptake. Air–sea exchange and chemistry barely matter.</li>
       <li><b>Test 2</b> sets mixing from a measured ocean carbon inventory and plant growth from the land sink. It then predicts 2024 CO₂ within about 5 ppm, without using the CO₂ record.</li>
+      <li><b>Test 3</b> adds a thermocline, so the ocean now matches both the 1994 inventory and today's sink. Its CO₂ is about 11 ppm high, which is well inside the Monte Carlo range.</li>
+      <li><b>Warming feedback</b> adds about 7 ppm by 2024 and about 18 ppm by 2100 if emissions stay at today's level.</li>
     </ul>
   </div>
   <div>
     <h3>Limits</h3>
     <ul>
-      <li>Two ocean layers: one mixing rate can't match both the 1994 inventory and today's ocean sink.</li>
+      <li>Land is the biggest uncertainty: land-use emissions and the land sink set most of the Monte Carlo range.</li>
       <li>The Global Carbon Budget itself leaves 80 GtC (38 ppm) unaccounted for since 1850.</li>
-      <li>No warming feedbacks, and a simple land model.</li>
+      <li>The warming feedback covers ocean chemistry only, not land, and the land model is simple.</li>
     </ul>
   </div>
   <div>
@@ -184,6 +212,8 @@ code{font-family:var(--f-mono);font-size:12.5px}
 <script>
 /*__MODEL__*/
 const D = /*__DATA__*/;
+const MC = /*__MC__*/;
+const MCF = /*__MCF__*/;
 const $ = id => document.getElementById(id);
 const NS = "http://www.w3.org/2000/svg";
 function el(tag, a, parent) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (parent) parent.appendChild(e); return e; }
@@ -206,18 +236,20 @@ const ICE = new Map(D.ice.map((v, i) => [1850 + i, v]));
 const GL = new Map(D.gl.map((v, i) => [D.glY0 + i, v]));
 const HIST = D.ice.concat(D.mlo.slice(0, 2024 - D.mloY0 + 1));   // observed CO2 1850-2024 (prescribed runs)
 const GCB_O = D.ocean, GCB_L = D.land;
-const PRESETS = { lit: { k_d: 0.05, beta: 0.4 }, con: { k_d: 0.334, beta: 0.345 } };
-let useLuc = true;
+const PRESETS = { lit: { layers: 2, k_d: 0.05, beta: 0.4 }, con: { layers: 2, k_d: 0.334, beta: 0.345 }, t3: { layers: 3, k1m: 1.104, age: 600, beta: 0.345 } };
+let useLuc = true, layers = 3, feedback = false;
 
 /* ---------- state from controls ---------- */
-function readParams() { return makeParams({ k_d: +$("kd").value, beta: +$("beta").value, k_a: +$("ka").value, T: +$("temp").value }); }
+function readParams() { return makeParams({ layers, k_d: +$("kd").value, k1m: +$("k1m").value, k2m: 3 / +$("age").value, beta: +$("beta").value,
+  k_a: +$("ka").value, T: +$("temp").value, feedback, tcre: +$("tcre").value }); }
 function emissionsSeries() {
-  const scale = +$("scale").value, r = +$("future").value / 100, end = +$("endYear").value;
+  const scale = +$("scale").value, r = +$("future").value / 100, end = +$("endYear").value, sc = $("scen").value;
   const N = Math.max(end, 2024) - 1850 + 1; const Ef = [], El = [];
+  const fut = t => sc === "flat" ? 1 : sc === "cut2" ? 0.98 ** t : sc === "netzero2050" ? Math.max(0, 1 - t / 26) : sc === "stop" ? 0 : (1 + r) ** t;
   for (let i = 0; i < N; i++) {
     const y = 1850 + i;
     if (y <= 2024) { Ef.push(scale * D.fossil[i]); El.push(useLuc ? scale * D.luc[i] : 0); }
-    else { const k = (1 + r) ** (y - 2024); Ef.push(scale * D.fossil[174] * k); El.push(useLuc ? scale * D.luc[174] * k : 0); }
+    else { const k = fut(y - 2024); Ef.push(scale * D.fossil[174] * k); El.push(useLuc ? scale * D.luc[174] * k : 0); }
   }
   return { Ef, El };
 }
@@ -225,10 +257,11 @@ let cache = {};
 function compute() {
   const p = readParams(), { Ef, El } = emissionsSeries();
   const run = runModel(Ef, El, p, HIST[0]);
-  const key = [p.k_d, p.beta, p.k_a, $("temp").value].join("|");
+  const key = [p.layers, p.k_d, p.k1m, p.k2m, p.beta, p.k_a, $("temp").value].join("|");
   if (cache.key !== key) {
-    const c = runModel(D.fossil.slice(0, 161), D.luc.slice(0, 161), p, HIST[0], HIST.slice(0, 161));
-    const conc = runModel(D.fossil.slice(0, 145), D.luc.slice(0, 145), p, HIST[0], HIST.slice(0, 145));
+    const p0 = Object.assign({}, p, { feedback: false });
+    const c = runModel(D.fossil.slice(0, 161), D.luc.slice(0, 161), p0, HIST[0], HIST.slice(0, 161));
+    const conc = runModel(D.fossil.slice(0, 145), D.luc.slice(0, 145), p0, HIST[0], HIST.slice(0, 145));
     let inv = 0; for (let i = 0; i < 145; i++) inv += conc.ocean[i];
     cache = { key, pulse: pulseTest(p, c.state, c.MAT0), inv94: inv };
   }
@@ -238,7 +271,7 @@ function compute() {
 /* ---------- box diagram ---------- */
 function drawBoxes(R, yi, year) {
   $("boxYear").textContent = year;
-  const r = R.run, f = frame($("boxDiagram"), 760, 360, { l: 0, r: 0, t: 0, b: 0 });
+  const r = R.run, three = R.p.layers === 3, f = frame($("boxDiagram"), 760, three ? 430 : 360, { l: 0, r: 0, t: 0, b: 0 });
   const defs = el("defs", {}, f.svg);
   const mk = el("marker", { id: "ar", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" }, defs);
   el("path", { d: "M0 0L10 5L0 10z", fill: "var(--muted)" }, mk);
@@ -252,7 +285,12 @@ function drawBoxes(R, yi, year) {
   box(260, 64, 240, 76, "var(--atmfill)", "var(--ocean)", "Atmosphere", `${r.MAT[yi].toFixed(0)} GtC`, `${ppm.toFixed(1)} ppm`);
   box(24, 220, 220, 76, "var(--landfill)", "var(--landc)", "Land plants and soils", `${r.ML[yi].toFixed(0)} GtC`, `stock change +${(r.ML[yi] - r.ML[0]).toFixed(0)} since 1850`);
   box(516, 196, 220, 76, "var(--oceanfill)", "var(--ocean)", "Surface ocean", `${r.MUP[yi].toFixed(0)} GtC`, `pH ${r.pH[yi].toFixed(3)}`);
-  box(516, 300, 220, 52, "var(--deepfill)", "var(--deep)", "Deep ocean", `${r.MLO[yi].toFixed(0)} GtC`, "");
+  if (three) {
+    box(516, 300, 220, 52, "var(--deepfill)", "var(--deep)", "Thermocline (75–1000 m)", `${r.MTH[yi].toFixed(0)} GtC`, "");
+    box(516, 374, 220, 52, "var(--deepfill)", "var(--deep)", "Deep ocean", `${r.MLO[yi].toFixed(0)} GtC`, "");
+    el("path", { d: "M626 352V372", fill: "none", stroke: "var(--muted)", "stroke-width": 1.5, "marker-end": "url(#ar)" }, f.svg);
+  } else box(516, 300, 220, 52, "var(--deepfill)", "var(--deep)", "Deep ocean", `${r.MLO[yi].toFixed(0)} GtC`, "");
+  if (R.p.feedback) txt(f.svg, 24, 66, `Warming ${r.dT[yi].toFixed(2)} °C weakens ocean uptake`, { style: "fill:var(--fail);font-size:12px" });
   const flow = (d, label, lx, ly, anchor = "start") => { el("path", { d, fill: "none", stroke: "var(--muted)", "stroke-width": 1.5, "marker-end": "url(#ar)" }, f.svg); txt(f.svg, lx, ly, label, { "text-anchor": anchor, style: "fill:var(--ink);font-size:12px" }); };
   flow("M380 18V62", `emissions ${E.toFixed(2)} GtC/yr`, 392, 40);
   flow("M300 142L170 218", `land uptake ${r.land[yi].toFixed(2)}`, 250, 196, "end");
@@ -267,11 +305,22 @@ function drawBoxes(R, yi, year) {
 function drawCO2(R, end) {
   const r = R.run, n = end - 1850 + 1, f = frame($("co2Chart"), 900, 360, { l: 58, r: 16, t: 14, b: 30 });
   const obsPts = [...OBS.map].filter(([y]) => y <= end), icePts = [...ICE].filter(([y]) => y <= end), glPts = [...GL].filter(([y]) => y <= end);
-  const all = [...r.ppm.slice(0, n), ...obsPts.map(p => p[1]), ...icePts.map(p => p[1])];
+  const sc = $("scen").value, named = ["flat", "cut2", "netzero2050", "stop"].includes(sc);
+  const showMC = presetIs("t3") && useLuc && +$("scale").value === 1 && (end <= 2024 || named) && Math.abs(+$("tcre").value - 1.8) < 1e-9;
+  const B = showMC ? (end > 2024 ? MCF[feedback ? "fb" : "nofb"][sc] : MC[feedback ? "fb" : "nofb"]) : null;
+  const all = [...r.ppm.slice(0, n), ...obsPts.map(p => p[1]), ...icePts.map(p => p[1]), ...(B ? [...B.p5.slice(0, n), ...B.p95.slice(0, n)] : [])];
   const yd = [Math.floor((Math.min(...all) - 5) / 20) * 20, Math.ceil((Math.max(...all) + 5) / 20) * 20], xd = [1850, end];
   const xs = v => f.m.l + (v - xd[0]) / (xd[1] - xd[0]) * f.iw, ys = v => f.m.t + f.ih - (v - yd[0]) / (yd[1] - yd[0]) * f.ih;
   axes(f, xs, ys, xd, yd, "CO₂ (ppm)");
-  if (end > 2024) { el("rect", { x: xs(2024), y: f.m.t, width: xs(end) - xs(2024), height: f.ih, fill: "var(--band)", opacity: .5 }, f.svg); txt(f.svg, xs(2024) + 6, f.m.t + 14, "scenario"); }
+  if (end > 2024) { el("line", { x1: xs(2024), x2: xs(2024), y1: f.m.t, y2: f.m.t + f.ih, stroke: "var(--muted)", "stroke-dasharray": "3 3" }, f.svg); txt(f.svg, xs(2024) + 6, f.m.t + 14, "scenario →"); }
+  $("mcLegend").hidden = !showMC;
+  $("mcNote").textContent = showMC ? `The shaded band shows 2,000 runs with each uncertain input drawn from its published range: land-use and fossil emissions, the ocean inventory, the deep-water age, the land sink${feedback ? " and TCRE" : ""}.${end <= 2024 ? " Measured CO₂ sits inside it." : ""}` : "";
+  if (B) {
+    const idx = Array.from({ length: n }, (_, i) => i);
+    let d = "M" + idx.map(i => `${xs(1850 + i).toFixed(1)},${ys(B.p95[i]).toFixed(1)}`).join("L");
+    for (let i = n - 1; i >= 0; i--) d += `L${xs(1850 + i).toFixed(1)},${ys(B.p5[i]).toFixed(1)}`;
+    el("path", { d: d + "Z", fill: "var(--band)" }, f.svg);
+  }
   line(icePts.map(([y, v]) => [xs(y), ys(v)]), { stroke: "var(--muted)", "stroke-width": 2 }, f.svg);
   glPts.forEach(([y, v]) => el("circle", { cx: xs(y), cy: ys(v), r: 2.2, fill: "var(--fossil)" }, f.svg));
   obsPts.forEach(([y, v]) => el("circle", { cx: xs(y), cy: ys(v), r: 2.4, fill: "var(--obs)" }, f.svg));
@@ -279,7 +328,9 @@ function drawCO2(R, end) {
   const cmpY = Math.min(end, Math.max(...OBS.map.keys()));
   const ob = OBS.map.get(cmpY), md = r.ppm[cmpY - 1850];
   const V = $("co2Verdict");
-  if (end > 2024) V.innerHTML = `In ${end} the model predicts <span class="hl">${r.ppm[n - 1].toFixed(0)} ppm</span> under this scenario. In 2024 it was ${(r.ppm[174] - OBS_DEFAULT.get(2024)) >= 0 ? "+" : ""}${(r.ppm[174] - OBS_DEFAULT.get(2024)).toFixed(1)} ppm from Mauna Loa.`;
+  if (end > 2024) { let pk = 0; for (let i = 1; i < n; i++) if (r.ppm[i] > r.ppm[pk]) pk = i;
+    const ch = r.ppm[n - 1] - r.ppm[174];
+    V.innerHTML = `CO₂ peaks at <span class="hl">${r.ppm[pk].toFixed(0)} ppm in ${1850 + pk}</span>. By ${end} it is <span class="hl">${ch >= 0 ? "+" : ""}${ch.toFixed(0)} ppm</span> from the model's 2024 level, with ${r.dT[n - 1].toFixed(1)} °C of warming.`; }
   else if (ob == null) V.textContent = `There are no measurements up to ${end} in the comparison data.`;
   else { const d = md - ob; V.innerHTML = `In ${cmpY} the model predicts <span class="hl">${md.toFixed(1)} ppm</span>. ${OBS.name} measured ${ob.toFixed(1)} ppm, so the model is <span class="hl">${Math.abs(d).toFixed(1)} ppm ${d > 0 ? "too high" : "too low"}</span>.`; }
 }
@@ -314,12 +365,17 @@ function drawChecks(R) {
     const dec = unit === "" ? 3 : unit === "%" || unit === " GtC" ? 0 : unit === " ppm" ? 1 : 2;
     if (u == null) { const d = v - c; return `<tr><td>${name}<br><span class="small">${src}</span></td><td class="num">${pub}</td><td class="num">${v.toFixed(dec)}${unit}</td><td><span class="pill info">${d >= 0 ? "+" : ""}${d.toFixed(1)} ppm</span></td></tr>`; }
     const ok = Math.abs(v - c) <= u;
-    const used = (i === 5 && presetIs("con")) ? ` <span class="pill info">used to set k_d</span>` : "";
+    const used = (i === 5 && (presetIs("con") || presetIs("t3"))) ? ` <span class="pill info">used to set ${presetIs("t3") ? "k_1" : "k_d"}</span>` : "";
     return `<tr><td>${name}<br><span class="small">${src}</span></td><td class="num">${pub}</td><td class="num">${v.toFixed(dec)}${unit}</td><td><span class="pill ${ok ? "pass" : "fail"}">${ok ? "passes" : "misses"}</span>${used}</td></tr>`;
   }).join("");
-  $("checkNote").textContent = presetIs("con") ? "In Test 2, k_d was set from the ocean inventory and β from the 1960–1999 land sink. Every other row is a prediction, and the CO₂ record was never used." : "";
+  $("checkNote").textContent = presetIs("con") ? "In Test 2, k_d was set from the ocean inventory and β from the 1960–1999 land sink. Every other row is a prediction, and the CO₂ record was never used." :
+    presetIs("t3") ? "In Test 3, k_1 was set from the ocean inventory, k_2 from the 600-year deep-water age and β from the 1960–1999 land sink. Every other row is a prediction, and the CO₂ record was never used." : "";
 }
-function presetIs(k) { return Math.abs(+$("kd").value - PRESETS[k].k_d) < 1e-9 && Math.abs(+$("beta").value - PRESETS[k].beta) < 1e-9 && +$("ka").value === 0.2 && +$("temp").value === 10; }
+function presetIs(k) {
+  const P = PRESETS[k], same = (a, b) => Math.abs(a - b) < 1e-9;
+  if (layers !== P.layers || !same(+$("beta").value, P.beta) || +$("ka").value !== 0.2 || +$("temp").value !== 10) return false;
+  return P.layers === 2 ? same(+$("kd").value, P.k_d) : same(+$("k1m").value, P.k1m) && same(+$("age").value, P.age);
+}
 
 /* ---------- pulse ---------- */
 function drawPulse(pl) {
@@ -343,31 +399,51 @@ function drawPulse(pl) {
 /* ---------- wiring ---------- */
 function labels() {
   $("kdOut").textContent = `${(+$("kd").value).toFixed(3)} /yr (${(1 / +$("kd").value).toFixed(0)} yr)`;
+  $("k1Out").textContent = `${(+$("k1m").value).toFixed(2)} /yr`;
+  $("ageOut").textContent = `${$("age").value} yr`;
+  $("tcreOut").textContent = `${(+$("tcre").value).toFixed(1)} °C`;
+  $("ctlKd").hidden = layers !== 2; $("ctlK1").hidden = layers !== 3; $("ctlK2").hidden = layers !== 3;
+  $("bL2").setAttribute("aria-pressed", layers === 2); $("bL3").setAttribute("aria-pressed", layers === 3);
+  $("bFB0").setAttribute("aria-pressed", !feedback); $("bFB1").setAttribute("aria-pressed", feedback);
   $("betaOut").textContent = (+$("beta").value).toFixed(3);
   $("kaOut").textContent = `${(+$("ka").value).toFixed(2)} /yr`;
   $("tempOut").textContent = `${$("temp").value} °C`;
   const s = +$("scale").value; $("scaleOut").textContent = s === 1 ? "real amount" : `${Math.round(s * 100)}% of real`;
   const fu = +$("future").value; $("futureOut").textContent = `${fu > 0 ? "+" : ""}${fu}% per year`;
   $("endOut").textContent = $("endYear").value;
-  const lit = presetIs("lit"), con = presetIs("con");
-  $("pLit").setAttribute("aria-pressed", lit); $("pCon").setAttribute("aria-pressed", con);
+  const lit = presetIs("lit"), con = presetIs("con"), t3 = presetIs("t3");
+  $("pLit").setAttribute("aria-pressed", lit); $("pCon").setAttribute("aria-pressed", con); $("pT3").setAttribute("aria-pressed", t3);
   $("presetNote").textContent = lit ? "Test 1 uses only published physical rates. BEAM's mixing rate (0.05 per year) dates from Bolin & Eriksson (1959)." :
-    con ? "Test 2 sets deep-ocean mixing from the measured ocean carbon inventory (Sabine et al. 2004) and plant fertilization from the 1960–1999 land sink. Both use only ocean or land data, never the CO₂ record." : "Custom rates: you have moved a slider away from both tests.";
+    con ? "Test 2 sets deep-ocean mixing from the measured ocean carbon inventory (Sabine et al. 2004) and plant fertilization from the 1960–1999 land sink. Both use only ocean or land data, never the CO₂ record." :
+    t3 ? "Test 3 adds a thermocline. Its two mixing rates come from the 1994 ocean inventory and the radiocarbon age of deep water, and plant fertilization from the land sink. None of them uses the CO₂ record." : "Custom rates: you have moved a slider away from all three tests.";
 }
 function update() {
   labels();
-  let end = +$("endYear").value; const fu = +$("future").value;
-  if (fu !== 0 && end <= 2024) { end = 2100; $("endYear").value = 2100; $("endOut").textContent = 2100; }
+  let end = +$("endYear").value; const sc = $("scen").value;
+  $("ctlFuture").hidden = sc !== "custom";
+  if (sc !== "none" && end <= 2024) { end = 2100; $("endYear").value = 2100; $("endOut").textContent = 2100; }
+  if (sc === "none" && end > 2024) { end = 2024; $("endYear").value = 2024; $("endOut").textContent = 2024; }
+  drawScenTable();
   const R = compute();
   drawBoxes(R, end - 1850, end); drawCO2(R, end);
   drawSink($("oceanChart"), R.run.ocean, GCB_O, "Ocean uptake", end); drawSink($("landChart"), R.run.land, GCB_L, "Land uptake", end);
   drawChecks(R); drawPulse(R.pulse);
 }
-function setPreset(k) { $("kd").value = PRESETS[k].k_d; $("beta").value = PRESETS[k].beta; $("ka").value = 0.2; $("temp").value = 10; update(); }
-$("pLit").onclick = () => setPreset("lit"); $("pCon").onclick = () => setPreset("con");
+function setPreset(k) { const P = PRESETS[k]; layers = P.layers; if (P.k_d != null) $("kd").value = P.k_d; if (P.k1m != null) { $("k1m").value = P.k1m; $("age").value = P.age; }
+  $("beta").value = P.beta; $("ka").value = 0.2; $("temp").value = 10; feedback = false; update(); }
+$("pLit").onclick = () => setPreset("lit"); $("pCon").onclick = () => setPreset("con"); $("pT3").onclick = () => setPreset("t3");
+$("bL2").onclick = () => { layers = 2; update(); }; $("bL3").onclick = () => { layers = 3; update(); };
+$("bFB0").onclick = () => { feedback = false; update(); }; $("bFB1").onclick = () => { feedback = true; update(); };
 $("bF").onclick = () => { useLuc = false; $("bF").setAttribute("aria-pressed", "true"); $("bT").setAttribute("aria-pressed", "false"); update(); };
 $("bT").onclick = () => { useLuc = true; $("bT").setAttribute("aria-pressed", "true"); $("bF").setAttribute("aria-pressed", "false"); update(); };
-["kd", "beta", "ka", "temp", "scale", "future", "endYear"].forEach(id => $(id).addEventListener("input", update));
+["kd", "k1m", "age", "tcre", "beta", "ka", "temp", "scale", "future", "endYear", "scen"].forEach(id => $(id).addEventListener("input", update));
+function drawScenTable() {
+  const T = MCF[feedback ? "fb_table" : "nofb_table"];
+  $("scenRows").innerHTML = T.map(r => `<tr><td>${r.scenario}</td><td class="num">${r["peak CO2 (ppm)"].toFixed(0)} <span class="small">(${r["peak 90% range"]})</span></td>
+    <td class="num">${r["peak year"]} <span class="small">(${r["peak year 90% range"]})</span></td><td class="num">${r["CO2 2100"].toFixed(0)} <span class="small">(${r["CO2 2100 90% range"]})</span></td>
+    <td class="num">${r["warming 2100 (C)"].toFixed(1)} °C</td></tr>`).join("");
+  $("stopNote").textContent = `Warming feedback is ${feedback ? "on" : "off"}; use the toggle above to switch. If emissions stop, CO₂ falls about 18 ppm in the first decade, then slows: the land turns into a small source as fertilization fades, and the deep ocean takes centuries. About 70% of the rise above 1850 is still there after 100 years.`;
+}
 
 /* ---------- import measured CO2 ---------- */
 function parseTable(text) {
