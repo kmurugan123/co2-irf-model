@@ -2,6 +2,24 @@
 
 02-120 final project. Can a carbon-cycle model built from physical and chemical rules reproduce the CO₂ rise measured at Mauna Loa from historical emissions, without being fitted to the CO₂ record?
 
+## In plain words
+
+People emit about 11 billion tonnes of carbon a year as CO₂, and only about half of it stays in the air. This project builds a computer model of where the rest goes, into the ocean and land plants, from physics and chemistry. It then checks whether the model can reproduce the CO₂ measured at Mauna Loa, Hawaii, *without* ever being tuned to those measurements.
+
+**What we found**
+- The best version of the model predicts 435 ppm for 2024. The measured value is 425 ppm, which is inside the model's uncertainty range.
+- The ocean needed three layers (surface, middle and deep). With two, it absorbed too much or too little.
+- CO₂ only peaks this century if emissions reach zero. With net zero by 2050, it peaks around 2039. If emissions stopped today, about 70% of the extra CO₂ would still be in the air after 100 years.
+- The biggest uncertainty is on land: how much CO₂ forest clearing releases, and how much plants absorb.
+
+**Start here**
+0. **Live model:** [open the interactive page](https://claude.ai/artifact/PpaqPAMcxjnLAr7iLqUVZs?sk=3Ylc8y6icCHQxqCl7TpwDA). It may only open for people in your organization.
+1. Or open `index.html` in a browser. It's the interactive model, with a short guide and a glossary at the top.
+2. Read `box_model/carbon_box_model.ipynb`. Each section explains in words first, then shows the code and charts.
+3. The tables below have the detailed numbers.
+
+The page calls the three model versions "Version 1, 2, 3". The notebook and the tables below call them "Test 1, 2, 3".
+
 ## The model
 
 There are four boxes, each tracked in GtC: the atmosphere, the surface ocean, the deep ocean and the land.
@@ -44,10 +62,10 @@ The equations are in [`box_model/box_model.py`](box_model/box_model.py) and the 
 
 ## Files
 
-- `index.html`: the interactive model. Open it in a browser, or use GitHub Pages.
+- `index.html`: the interactive model. Open it in a browser, or use GitHub Pages. Its **Monte Carlo lab** lets you choose which inputs are uncertain and by how much, pick the model and scenario, then press *Run experiment* (up to 3,000 runs in the browser). It shows the range, a histogram and which input matters most.
 - `box_model/`: the model (`box_model.py`, two layers; `ocean3.py`, three layers + feedback + ensembles), data loaders, experiments, notebook and tests.
   - Run the tests with `cd box_model && python -m pytest -q` (19 tests).
-  - Regenerate the Monte Carlo bands (history and scenarios) with `python make_mc_band.py`.
+  - Regenerate the Monte Carlo bands with `python make_mc_band.py`, and the lab's calibration grids with `python make_calibration.py`.
   - Rebuild the page with `cd box_model/web && python build_page.py`.
 - `proposal/revised_proposal.pdf`: the revised proposal.
 - `co2_irf_model.ipynb`, `data/`: the first version, which used the Joos impulse-response curve fit. It is kept for comparison.

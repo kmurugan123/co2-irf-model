@@ -8,16 +8,16 @@
 :root{
   --bg:#f2f5f4; --panel:#ffffff; --ink:#15232a; --muted:#566a71; --rule:#d5dfde;
   --ocean:#0f6b7c; --deep:#24434d; --landc:#5d7f3a; --fossil:#b7791f; --obs:#15232a; --pass:#2f7d4f; --fail:#b23b3b; --band:rgba(183,121,31,.18);
-  --atmfill:rgba(15,107,124,.10); --oceanfill:rgba(79,159,176,.16); --deepfill:rgba(36,67,77,.16); --landfill:rgba(93,127,58,.14);
+  --band2:rgba(183,121,31,.32); --atmfill:rgba(15,107,124,.10); --oceanfill:rgba(79,159,176,.16); --deepfill:rgba(36,67,77,.16); --landfill:rgba(93,127,58,.14);
   --f-display:"Literata",Georgia,serif; --f-body:"Public Sans",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0f1a1e; --panel:#162429; --ink:#e3ecec; --muted:#93a8ad; --rule:#2a3c42;
-  --ocean:#4fb6c6; --deep:#9ccbd3; --landc:#9bc47a; --fossil:#e0a54a; --obs:#e3ecec; --pass:#6cc48f; --fail:#ec7d7d; --band:rgba(224,165,74,.2);
+  --band2:rgba(224,165,74,.36); --ocean:#4fb6c6; --deep:#9ccbd3; --landc:#9bc47a; --fossil:#e0a54a; --obs:#e3ecec; --pass:#6cc48f; --fail:#ec7d7d; --band:rgba(224,165,74,.2);
   --atmfill:rgba(79,182,198,.12); --oceanfill:rgba(79,182,198,.18); --deepfill:rgba(156,203,211,.14); --landfill:rgba(155,196,122,.14); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1a1e; --panel:#162429; --ink:#e3ecec; --muted:#93a8ad; --rule:#2a3c42;
-  --ocean:#4fb6c6; --deep:#9ccbd3; --landc:#9bc47a; --fossil:#e0a54a; --obs:#e3ecec; --pass:#6cc48f; --fail:#ec7d7d; --band:rgba(224,165,74,.2);
+  --band2:rgba(224,165,74,.36); --ocean:#4fb6c6; --deep:#9ccbd3; --landc:#9bc47a; --fossil:#e0a54a; --obs:#e3ecec; --pass:#6cc48f; --fail:#ec7d7d; --band:rgba(224,165,74,.2);
   --atmfill:rgba(79,182,198,.12); --oceanfill:rgba(79,182,198,.18); --deepfill:rgba(156,203,211,.14); --landfill:rgba(155,196,122,.14); color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
 .wrap{max-width:1000px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:24px}
@@ -39,10 +39,32 @@ section.card{background:var(--panel);border:1px solid var(--rule);border-radius:
 .ctl .hint{font-size:12px;color:var(--muted)}
 input[type=range]{width:100%;accent-color:var(--ocean)}
 .group-title{font-weight:600;font-size:13px;grid-column:1/-1;border-top:1px solid var(--rule);padding-top:10px}
-.sel{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:6px;max-width:100%}
+.sel{width:100%;font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:6px;max-width:100%}
 .seg{display:flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
 .seg button{flex:1;font:inherit;font-size:13px;padding:6px 8px;border:0;background:transparent;color:var(--ink);cursor:pointer}
 .seg button[aria-pressed=true]{background:var(--ocean);color:var(--panel)}
+.pair{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.pair input{width:72px;font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:4px 6px}
+.ctl input[type=checkbox]{accent-color:var(--ocean)}
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.btn.primary{background:var(--ocean);color:var(--panel);font-weight:600;padding:9px 16px}
+.btn:disabled{opacity:.5;cursor:wait}
+progress{width:180px;accent-color:var(--ocean)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.stat{border-top:2px solid var(--rule);padding-top:6px;display:flex;flex-direction:column;gap:2px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-family:var(--f-mono);font-size:18px;font-variant-numeric:tabular-nums}
+.answer,.howto{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:14px 18px;display:flex;flex-direction:column;gap:6px}
+.answer{border-left:4px solid var(--ocean)}
+.answer ul,.howto ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-width:75ch}
+details.glossary,details.adv{border:1px solid var(--rule);border-radius:8px;background:var(--panel)}
+details.adv{background:var(--bg)}
+details.glossary summary,details.adv summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:14px}
+details.glossary dl{margin:0;padding:0 14px 14px;display:grid;grid-template-columns:minmax(110px,max-content) 1fr;gap:6px 16px;font-size:14px}
+details.glossary dt{font-weight:600}
+details.glossary dd{margin:0;color:var(--ink)}
+details.adv>.small,details.adv>.controls{padding:0 14px 14px}
+.steps-small{margin:0;padding-left:20px;font-size:14px;display:flex;flex-direction:column;gap:2px}
 .verdict{font-size:16px;font-weight:500;max-width:none}
 .hl{font-family:var(--f-mono)}
 .chart{width:100%;overflow-x:auto}
@@ -73,57 +95,92 @@ code{font-family:var(--f-mono);font-size:12.5px}
 </style>
 
 <div class="wrap">
-<header style="display:flex;flex-direction:column;gap:10px">
-  <span class="eyebrow">02-120 final project · mechanistic carbon cycle</span>
+<header style="display:flex;flex-direction:column;gap:12px">
+  <span class="eyebrow">02-120 final project · carbon-cycle model</span>
   <h1>Where does our CO₂ go?</h1>
-  <p>This model follows carbon between four boxes: the air, the surface ocean, the deep ocean and land plants. Every flow follows a physical rule, such as ocean chemistry, mixing or plant growth. Nothing is fitted to the measured CO₂, so the CO₂ record is a fair test of the model.</p>
-  <div class="presets" role="group" aria-label="Parameter sets">
-    <button class="btn" id="pLit" type="button" aria-pressed="false">Test 1: rates from the 1959 literature</button>
-    <button class="btn" id="pCon" type="button" aria-pressed="false">Test 2: rates set from ocean and land data</button>
-    <button class="btn" id="pT3" type="button" aria-pressed="true">Test 3: three-layer ocean</button>
+  <p>Every year people put about 11 billion tonnes of carbon into the air as CO₂. Only about half of it stays there. The ocean and plants soak up the rest. This page is a computer model of that process. It uses physics and chemistry, not curve fitting, to predict how much CO₂ should be in the air, then checks the prediction against real measurements.</p>
+  <div class="answer">
+    <h2 style="font-size:18px">The short answer</h2>
+    <ul>
+      <li><b>The model works.</b> Built only from physics and measurements of the ocean and land, it predicts 2024 CO₂ at 435 ppm. The measured value is 425 ppm, well inside the model's uncertainty range.</li>
+      <li><b>The ocean needed three layers.</b> With only a surface and a deep layer, the ocean absorbed too much or too little. Adding a middle layer fixed it.</li>
+      <li><b>CO₂ only peaks this century if emissions reach zero.</b> With net zero by 2050, CO₂ peaks around 2039. If emissions stopped today, about 70% of the extra CO₂ would still be in the air 100 years later.</li>
+    </ul>
+  </div>
+  <div class="howto">
+    <h2 style="font-size:18px">How to use this page</h2>
+    <ol>
+      <li><b>Pick a version of the model</b> with the buttons below. Version 3 is the best one.</li>
+      <li><b>See if it matches reality</b> in <a href="#h-co2">the CO₂ chart</a>. The black dots are real measurements.</li>
+      <li><b>Look into the future</b>: pick a scenario under <a href="#h-controls">Change the emissions</a>.</li>
+      <li><b>Run your own experiment</b> in <a href="#h-lab">the uncertainty lab</a>, which runs the model thousands of times with different inputs.</li>
+    </ol>
+  </div>
+  <div class="presets" role="group" aria-label="Model versions">
+    <button class="btn" id="pLit" type="button" aria-pressed="false">Version 1: textbook numbers from 1959</button>
+    <button class="btn" id="pCon" type="button" aria-pressed="false">Version 2: numbers from ocean and land data</button>
+    <button class="btn" id="pT3" type="button" aria-pressed="true">Version 3: better ocean (best)</button>
   </div>
   <p class="small" id="presetNote"></p>
+  <details class="glossary">
+    <summary>What do these words mean?</summary>
+    <dl>
+      <dt>ppm</dt><dd>Parts per million: how much CO₂ is in the air. 425 ppm means 425 CO₂ molecules in every million air molecules. Before industry it was about 280.</dd>
+      <dt>GtC</dt><dd>Gigatonnes of carbon, or billion tonnes. 2.124 GtC in the air raises CO₂ by 1 ppm.</dd>
+      <dt>Sink</dt><dd>Something that takes CO₂ out of the air. The ocean and land plants are the two big sinks.</dd>
+      <dt>Thermocline</dt><dd>The middle layer of the ocean, from about 75 m to 1,000 m deep. Water there mixes with the surface within decades. The deep ocean below takes centuries.</dd>
+      <dt>Fertilization (β)</dt><dd>Plants grow a bit faster when there is more CO₂, so they absorb more.</dd>
+      <dt>Warming feedback</dt><dd>Warmer seawater holds less CO₂, so warming weakens the ocean sink and leaves more CO₂ in the air.</dd>
+      <dt>Monte Carlo</dt><dd>Running the model many times, each time picking uncertain inputs at random within their known error ranges, to see the range of possible answers.</dd>
+      <dt>Scenario</dt><dd>A "what if" path for future emissions, such as "cut 2% per year" or "net zero by 2050".</dd>
+      <dt>Pulse test</dt><dd>A standard test from a published paper (Joos et al. 2013): add 100 GtC at once and track how much is still in the air 1,000 years later. The answer should be about 25%.</dd>
+    </dl>
+  </details>
 </header>
 
 <section class="card" aria-labelledby="h-boxes">
-  <span class="eyebrow">The model</span>
-  <h2 id="h-boxes">Carbon stocks and flows in <span id="boxYear"></span></h2>
+  <span class="eyebrow">How the model works</span>
+  <h2 id="h-boxes">Where the carbon is in <span id="boxYear"></span></h2>
+  <p class="small">The model is a set of boxes that pass carbon between them. Emissions go into the air. The ocean and plants take some back out. Numbers in the boxes are how much carbon each one holds, in GtC. Numbers on the arrows are how much moves each year.</p>
   <div class="chart" id="boxDiagram"></div>
-  <p class="small">Numbers inside the boxes are carbon stocks in GtC (billion tonnes of carbon). Numbers on the arrows are flows in GtC per year. 2.124 GtC in the air equals 1 ppm of CO₂.</p>
 </section>
 
 <section class="card" aria-labelledby="h-controls">
-  <h2 id="h-controls">Change the physics or the emissions</h2>
+  <h2 id="h-controls">Change the emissions</h2>
   <div class="controls">
-    <div class="group-title">Physical rates</div>
-    <div class="ctl"><label>Ocean layers</label><div class="seg" role="group" aria-label="Ocean layers"><button id="bL2" type="button" aria-pressed="false">2: surface + deep</button><button id="bL3" type="button" aria-pressed="true">3: + thermocline</button></div></div>
-    <div class="ctl" id="ctlKd" hidden><label for="kd">Deep-ocean mixing k_d <output id="kdOut"></output></label><input id="kd" type="range" min="0.02" max="1" step="0.002" value="0.334"><span class="hint">How fast the surface ocean hands carbon to the deep ocean.</span></div>
-    <div class="ctl" id="ctlK1"><label for="k1m">Surface–thermocline mixing k_1 <output id="k1Out"></output></label><input id="k1m" type="range" min="0.05" max="10" step="0.001" value="1.104"><span class="hint">Set from the ocean's carbon gain by 1994 (Sabine et al. 2004).</span></div>
-    <div class="ctl" id="ctlK2"><label for="age">Deep-water age (sets k_2) <output id="ageOut"></output></label><input id="age" type="range" min="100" max="2000" step="10" value="600"><span class="hint">Radiocarbon age below 1,500 m is about 300–900 years (Matsumoto 2007).</span></div>
-    <div class="ctl"><label for="beta">Plant fertilization β <output id="betaOut"></output></label><input id="beta" type="range" min="0" max="0.8" step="0.005" value="0.345"><span class="hint">How much faster plants grow as CO₂ rises.</span></div>
-    <div class="ctl"><label for="ka">Air–sea exchange k_a <output id="kaOut"></output></label><input id="ka" type="range" min="0.05" max="2" step="0.05" value="0.2"><span class="hint">How fast the surface ocean catches up with the air.</span></div>
-    <div class="ctl"><label for="temp">Ocean chemistry temperature <output id="tempOut"></output></label><input id="temp" type="range" min="5" max="25" step="1" value="10"><span class="hint">Sets the chemical constants. The model's default is 10 °C.</span></div>
-    <div class="group-title">Warming feedback</div>
-    <div class="ctl"><label>Warmer ocean holds less CO₂</label><div class="seg" role="group" aria-label="Warming feedback"><button id="bFB0" type="button" aria-pressed="true">Off</button><button id="bFB1" type="button" aria-pressed="false">On</button></div></div>
-    <div class="ctl"><label for="tcre">Warming per 1000 GtC (TCRE) <output id="tcreOut"></output></label><input id="tcre" type="range" min="1.0" max="2.6" step="0.1" value="1.8"><span class="hint">IPCC AR6 likely range is 1.4–2.2 °C.</span></div>
-    <div class="group-title">Emissions</div>
-    <div class="ctl"><label>Emissions included</label><div class="seg" role="group" aria-label="Emissions included"><button id="bF" type="button" aria-pressed="false">Fuel only</button><button id="bT" type="button" aria-pressed="true">Fuel + land use</button></div></div>
-    <div class="ctl"><label for="scale">Scale all emissions <output id="scaleOut"></output></label><input id="scale" type="range" min="0" max="2" step="0.05" value="1"></div>
-    <div class="ctl"><label for="scen">After 2024</label><select id="scen" class="sel">
-      <option value="none">History only (to 2024)</option>
-      <option value="flat">Emissions held at the 2024 level</option>
-      <option value="cut2">Emissions cut 2% per year</option>
-      <option value="netzero2050">Net zero by 2050</option>
+    <div class="ctl"><label for="scen">What happens after 2024?</label><select id="scen" class="sel">
+      <option value="none">Nothing: just show history to 2024</option>
+      <option value="flat">Emissions stay at today's level</option>
+      <option value="cut2">Emissions drop 2% every year</option>
+      <option value="netzero2050">Emissions reach zero by 2050</option>
       <option value="stop">All emissions stop in 2025</option>
-      <option value="custom">Custom yearly change</option></select><span class="hint">Scenarios run to 2100.</span></div>
-    <div class="ctl" id="ctlFuture" hidden><label for="future">Emissions change per year <output id="futureOut"></output></label><input id="future" type="range" min="-10" max="3" step="0.5" value="0"></div>
-    <div class="ctl"><label for="endYear">Show up to <output id="endOut"></output></label><input id="endYear" type="range" min="1900" max="2100" step="1" value="2024"></div>
+      <option value="custom">Choose my own yearly change</option></select><span class="hint">Picking a scenario runs the model to 2100.</span></div>
+    <div class="ctl" id="ctlFuture" hidden><label for="future">Change per year <output id="futureOut"></output></label><input id="future" type="range" min="-10" max="3" step="0.5" value="0"></div>
+    <div class="ctl"><label for="scale">Make past emissions bigger or smaller <output id="scaleOut"></output></label><input id="scale" type="range" min="0" max="2" step="0.05" value="1"><span class="hint">What if the world had emitted more, or less?</span></div>
+    <div class="ctl"><label>Which emissions to count</label><div class="seg" role="group" aria-label="Emissions included"><button id="bF" type="button" aria-pressed="false">Fuel only</button><button id="bT" type="button" aria-pressed="true">Fuel + forests</button></div><span class="hint">"Forests" means emissions from clearing land.</span></div>
+    <div class="ctl"><label for="endYear">Show the years up to <output id="endOut"></output></label><input id="endYear" type="range" min="1900" max="2100" step="1" value="2024"></div>
+    <div class="ctl"><label>Warming weakens the ocean</label><div class="seg" role="group" aria-label="Warming feedback"><button id="bFB0" type="button" aria-pressed="true">Off</button><button id="bFB1" type="button" aria-pressed="false">On</button></div><span class="hint">Turn on to include the warming feedback.</span></div>
   </div>
+  <details class="adv">
+    <summary>Advanced: change the physics</summary>
+    <p class="small">These are the model's physical rates. The version buttons above set them from published measurements. Move a slider to see what each one does.</p>
+    <div class="controls">
+      <div class="ctl"><label>Ocean layers</label><div class="seg" role="group" aria-label="Ocean layers"><button id="bL2" type="button" aria-pressed="false">2: surface + deep</button><button id="bL3" type="button" aria-pressed="true">3: + middle layer</button></div></div>
+      <div class="ctl" id="ctlKd" hidden><label for="kd">How fast the ocean mixes downward <output id="kdOut"></output></label><input id="kd" type="range" min="0.02" max="1" step="0.002" value="0.334"><span class="hint">Two-layer ocean only (k_d).</span></div>
+      <div class="ctl" id="ctlK1"><label for="k1m">Surface → middle-layer mixing <output id="k1Out"></output></label><input id="k1m" type="range" min="0.05" max="10" step="0.001" value="1.104"><span class="hint">Set so the ocean holds the measured 118 GtC by 1994 (k_1).</span></div>
+      <div class="ctl" id="ctlK2"><label for="age">Age of deep ocean water <output id="ageOut"></output></label><input id="age" type="range" min="100" max="2000" step="10" value="600"><span class="hint">Measured at 300–900 years. Older water means slower mixing (k_2).</span></div>
+      <div class="ctl"><label for="beta">How much plants respond to CO₂ <output id="betaOut"></output></label><input id="beta" type="range" min="0" max="0.8" step="0.005" value="0.345"><span class="hint">Higher means plants absorb more as CO₂ rises (β).</span></div>
+      <div class="ctl"><label for="ka">How fast the sea surface absorbs CO₂ <output id="kaOut"></output></label><input id="ka" type="range" min="0.05" max="2" step="0.05" value="0.2"><span class="hint">Air–sea exchange (k_a).</span></div>
+      <div class="ctl"><label for="temp">Ocean temperature for the chemistry <output id="tempOut"></output></label><input id="temp" type="range" min="5" max="25" step="1" value="10"><span class="hint">The default is 10 °C.</span></div>
+      <div class="ctl"><label for="tcre">Warming per 1,000 GtC emitted <output id="tcreOut"></output></label><input id="tcre" type="range" min="1.0" max="2.6" step="0.1" value="1.8"><span class="hint">The IPCC's likely range is 1.4–2.2 °C (TCRE). Used when warming is on.</span></div>
+    </div>
+  </details>
 </section>
 
 <section class="card" aria-labelledby="h-co2">
-  <span class="eyebrow">The test the model never saw</span>
-  <h2 id="h-co2">Predicted CO₂ vs. measurements</h2>
+  <span class="eyebrow">Does it match reality?</span>
+  <h2 id="h-co2">Model vs. real CO₂ measurements</h2>
+  <p class="small">The <b>blue line</b> is the model. The <b>black dots</b> are CO₂ measured at Mauna Loa, Hawaii, since 1959. The <b>grey line</b> is older CO₂ measured in air bubbles in Antarctic ice. The model never used these measurements while it was being built, so this is a fair test. The shaded band shows the range of possible answers once you account for uncertainty.</p>
   <p class="verdict" id="co2Verdict"></p>
   <div class="chart" id="co2Chart"></div>
   <div class="legend">
@@ -146,16 +203,58 @@ code{font-family:var(--f-mono);font-size:12.5px}
 </section>
 
 <section class="card" aria-labelledby="h-scen">
-  <span class="eyebrow">Future scenarios · Test 3 rates · 2,000 Monte Carlo runs each</span>
-  <h2 id="h-scen">When does CO₂ peak?</h2>
-  <p class="small">Each scenario starts from the model's own 2024 state, which is about 11 ppm above Mauna Loa (18 ppm with the feedback on). Compare <b>changes</b> between scenarios rather than exact values. Ranges are 5–95% of 2,000 runs. Pick a scenario above to see it on the chart.</p>
+  <span class="eyebrow">What happens next?</span>
+  <h2 id="h-scen">When does CO₂ stop rising?</h2>
+  <p class="small">Four possible futures, each run 2,000 times with Version 3 of the model. The number in brackets is the range covering 90% of runs. The model starts about 11 ppm higher than reality in 2024 (18 ppm with warming on), so compare the scenarios with each other rather than reading exact numbers. To see one on the chart, pick it under "What happens after 2024?" above.</p>
   <div class="tablewrap"><table><thead><tr><th>Scenario</th><th>Peak CO₂ (ppm)</th><th>Peak year</th><th>CO₂ in 2100 (ppm)</th><th>Warming in 2100</th></tr></thead><tbody id="scenRows"></tbody></table></div>
   <p class="small" id="stopNote"></p>
 </section>
 
+<section class="card" aria-labelledby="h-lab" id="lab">
+  <span class="eyebrow">Try it yourself</span>
+  <h2 id="h-lab">Uncertainty lab: run the model thousands of times</h2>
+  <ol class="steps-small"><li>Tick the inputs you think are uncertain, and say how uncertain they are.</li><li>Press <b>Run experiment</b>.</li><li>Read the result: is the real measurement inside the model's range, and which input matters most?</li></ol>
+  <div class="controls">
+    <div class="group-title">Model</div>
+    <div class="ctl"><label>Ocean layers</label><div class="seg" role="group" aria-label="Ocean layers for the experiment"><button id="mcL2" type="button" aria-pressed="false">2 layers</button><button id="mcL3" type="button" aria-pressed="true">3 layers</button></div></div>
+    <div class="ctl"><label>Warming feedback</label><div class="seg" role="group" aria-label="Warming feedback for the experiment"><button id="mcFB0" type="button" aria-pressed="true">Off</button><button id="mcFB1" type="button" aria-pressed="false">On</button></div></div>
+    <div class="ctl"><label for="mcScen">Emissions after 2024</label><select id="mcScen" class="sel">
+      <option value="none">History only: test against 2024</option>
+      <option value="flat">Held at the 2024 level, to 2100</option>
+      <option value="cut2">Cut 2% per year, to 2100</option>
+      <option value="netzero2050">Net zero by 2050, to 2100</option>
+      <option value="stop">Stop in 2025, to 2100</option></select></div>
+    <div class="group-title">Which inputs are uncertain? (tick to let them vary)</div>
+    <div class="ctl"><label><span><input type="checkbox" id="uLuc" checked> Land-use emissions</span></label><div class="pair"><span>± </span><input id="uLucSd" type="number" min="0" max="200" step="5" value="50"><span>% typical error</span></div><span class="hint">CO₂ from clearing forests. Very uncertain: 1.4 ± 0.7 GtC/yr.</span></div>
+    <div class="ctl"><label><span><input type="checkbox" id="uFos" checked> Fossil emissions</span></label><div class="pair"><span>± </span><input id="uFosSd" type="number" min="0" max="50" step="1" value="5"><span>% typical error</span></div><span class="hint">CO₂ from fuel. Well known: 10.3 ± 0.5 GtC/yr.</span></div>
+    <div class="ctl"><label><span><input type="checkbox" id="uInv" checked> Ocean carbon gained by 1994</span></label><div class="pair"><input id="uInvM" type="number" step="1" value="118"><span>±</span><input id="uInvSd" type="number" min="0" step="1" value="19"><span>GtC</span></div><span class="hint">Measured from ship surveys (Sabine et al. 2004). Sets how fast the ocean mixes.</span></div>
+    <div class="ctl" id="uAgeRow"><label><span><input type="checkbox" id="uAge" checked> Deep-water age</span></label><div class="pair"><input id="uAgeMin" type="number" min="50" step="50" value="300"><span>to</span><input id="uAgeMax" type="number" min="50" step="50" value="900"><span>yr</span></div><span class="hint">From radiocarbon dating (Matsumoto 2007). Sets how fast the deep ocean mixes. Three-layer model only.</span></div>
+    <div class="ctl"><label><span><input type="checkbox" id="uLand" checked> Land sink 1960–1999</span></label><div class="pair"><input id="uLandM" type="number" step="0.05" value="1.47"><span>±</span><input id="uLandSd" type="number" min="0" step="0.05" value="0.8"><span>GtC/yr</span></div><span class="hint">How much carbon land absorbed (Global Carbon Budget). Sets how strongly plants respond to CO₂.</span></div>
+    <div class="ctl" id="uTcreRow"><label><span><input type="checkbox" id="uTcre" checked> Warming per 1000 GtC</span></label><div class="pair"><input id="uTcreMin" type="number" step="0.1" value="1.4"><span>to</span><input id="uTcreMax" type="number" step="0.1" value="2.2"><span>°C</span></div><span class="hint">IPCC range. Only used when warming feedback is on.</span></div>
+    <div class="group-title">Runs</div>
+    <div class="ctl"><label for="mcN">Number of runs <output id="mcNOut"></output></label><input id="mcN" type="range" min="100" max="3000" step="100" value="1000"></div>
+    <div class="ctl"><label for="mcSeed">Random seed</label><input id="mcSeed" type="number" min="1" step="1" value="1" class="sel"><span class="hint">Same seed and settings give the same result.</span></div>
+  </div>
+  <div class="runbar">
+    <button id="mcRun" class="btn primary" type="button">Run experiment</button>
+    <button id="mcStop" class="btn" type="button" hidden>Stop</button>
+    <button id="mcReset" class="btn" type="button">Reset to published ranges</button>
+    <progress id="mcProg" max="1" value="0" hidden></progress>
+    <span class="small" id="mcStatus" role="status"></span>
+  </div>
+  <div id="mcResults" hidden>
+    <p class="verdict" id="mcVerdict"></p>
+    <div class="stats" id="mcStats"></div>
+    <div class="chart" id="mcChart"></div>
+    <div class="legend"><span><i class="sw" style="background:var(--band)"></i>90% of runs</span><span><i class="sw" style="background:var(--band2)"></i>middle 50%</span><span><i class="sw" style="background:var(--ocean)"></i>median</span><span><i class="sw" style="background:var(--muted);height:2px"></i>sample runs</span><span><i class="dot" style="background:var(--obs)"></i>measured</span></div>
+    <div class="two"><div class="chart" id="mcHist"></div><div class="chart" id="mcCorr"></div></div>
+  </div>
+</section>
+
 <section class="card" aria-labelledby="h-sinks">
-  <span class="eyebrow">Each box checked on its own</span>
-  <h2 id="h-sinks">Ocean and land uptake vs. the Global Carbon Budget</h2>
+  <span class="eyebrow">Checking each part</span>
+  <h2 id="h-sinks">Do the ocean and plants absorb the right amount?</h2>
+  <p class="small">Getting the total CO₂ right isn't enough: errors in the ocean and on land could cancel out. These charts compare how much carbon the model's ocean and land absorb each year (blue) with the Global Carbon Budget's estimates (black).</p>
   <div class="two"><div class="chart" id="oceanChart"></div><div class="chart" id="landChart"></div></div>
   <div class="legend">
     <span><i class="sw" style="background:var(--ocean)"></i>Model</span>
@@ -164,16 +263,17 @@ code{font-family:var(--f-mono);font-size:12.5px}
 </section>
 
 <section class="card" aria-labelledby="h-checks">
-  <span class="eyebrow">Scorecard</span>
-  <h2 id="h-checks">Checks against published results</h2>
+  <span class="eyebrow">Report card</span>
+  <h2 id="h-checks">How the model scores against published results</h2>
+  <p class="small">Each row compares a number from the model with a number measured or published by scientists. "Passes" means the model is within the published error range.</p>
   <div class="tablewrap"><table><thead><tr><th>Check</th><th>Published</th><th>Model</th><th>Result</th></tr></thead><tbody id="checkRows"></tbody></table></div>
   <p class="small" id="checkNote"></p>
 </section>
 
 <section class="card" aria-labelledby="h-pulse">
-  <span class="eyebrow">Joos et al. (2013) experiment</span>
-  <h2 id="h-pulse">Where a 100 GtC pulse ends up</h2>
-  <p class="small">The atmosphere is held at 389 ppm after the observed history to 2010. Then 100 GtC is added and followed for 1,000 years. The orange bars are the published multi-model results after 1,000 years.</p>
+  <span class="eyebrow">A test from a published paper</span>
+  <h2 id="h-pulse">One big puff of CO₂: how much is left after 1,000 years?</h2>
+  <p class="small">Joos et al. (2013) added 100 GtC to 15 different climate models at once and tracked where it went. After 1,000 years, about 25% was still in the air. This model does the same experiment. The coloured areas show where the carbon ends up over time: air, ocean or land. The orange bars on the right are the published answers.</p>
   <div class="chart" id="pulseChart"></div>
   <div class="legend">
     <span><i class="sw" style="background:var(--atmfill);border:1px solid var(--ocean)"></i>Still in the air</span>
@@ -185,21 +285,20 @@ code{font-family:var(--f-mono);font-size:12.5px}
 
 <section class="notes" aria-label="What we learned">
   <div>
-    <h3>What the tests show</h3>
+    <h3>What we found</h3>
     <ul>
-      <li><b>Test 1 (1959 rates)</b> passes the pulse test, but overshoots 2024 CO₂ by 48 ppm. Its ocean takes up about a third of the measured amount.</li>
-      <li>Changing one rate at a time shows that <b>deep-ocean mixing</b> controls ocean uptake. Air–sea exchange and chemistry barely matter.</li>
-      <li><b>Test 2</b> sets mixing from a measured ocean carbon inventory and plant growth from the land sink. It then predicts 2024 CO₂ within about 5 ppm, without using the CO₂ record.</li>
-      <li><b>Test 3</b> adds a thermocline, so the ocean now matches both the 1994 inventory and today's sink. Its CO₂ is about 11 ppm high, which is well inside the Monte Carlo range.</li>
-      <li><b>Warming feedback</b> adds about 7 ppm by 2024 and about 18 ppm by 2100 if emissions stay at today's level.</li>
+      <li><b>Version 1</b> uses textbook numbers from 1959. Its ocean mixes too slowly and absorbs only a third of what it should, so CO₂ comes out 48 ppm too high.</li>
+      <li><b>Version 2</b> sets the ocean's mixing speed from real ocean measurements. CO₂ is now close, but the ocean absorbs too much today.</li>
+      <li><b>Version 3</b> adds a middle ocean layer. The ocean is now right in both the past and the present, and CO₂ is within the uncertainty range.</li>
+      <li><b>Warming</b> makes the ocean absorb less, adding about 7 ppm by 2024 and about 18 ppm by 2100 if emissions stay at today's level.</li>
     </ul>
   </div>
   <div>
-    <h3>Limits</h3>
+    <h3>What the model can't do (yet)</h3>
     <ul>
-      <li>Land is the biggest uncertainty: land-use emissions and the land sink set most of the Monte Carlo range.</li>
-      <li>The Global Carbon Budget itself leaves 80 GtC (38 ppm) unaccounted for since 1850.</li>
-      <li>The warming feedback covers ocean chemistry only, not land, and the land model is simple.</li>
+      <li><b>Land is the biggest unknown.</b> How much CO₂ comes from clearing forests, and how much plants absorb, causes most of the uncertainty.</li>
+      <li>Even scientists' own carbon accounting doesn't add up exactly: the Global Carbon Budget has 80 GtC (38 ppm) it can't place since 1850.</li>
+      <li>The warming effect is only modelled for the ocean, not for land, and the land model is simple.</li>
     </ul>
   </div>
   <div>
@@ -286,14 +385,14 @@ function drawBoxes(R, yi, year) {
   box(24, 220, 220, 76, "var(--landfill)", "var(--landc)", "Land plants and soils", `${r.ML[yi].toFixed(0)} GtC`, `stock change +${(r.ML[yi] - r.ML[0]).toFixed(0)} since 1850`);
   box(516, 196, 220, 76, "var(--oceanfill)", "var(--ocean)", "Surface ocean", `${r.MUP[yi].toFixed(0)} GtC`, `pH ${r.pH[yi].toFixed(3)}`);
   if (three) {
-    box(516, 300, 220, 52, "var(--deepfill)", "var(--deep)", "Thermocline (75–1000 m)", `${r.MTH[yi].toFixed(0)} GtC`, "");
+    box(516, 300, 220, 52, "var(--deepfill)", "var(--deep)", "Middle layer (75–1000 m)", `${r.MTH[yi].toFixed(0)} GtC`, "");
     box(516, 374, 220, 52, "var(--deepfill)", "var(--deep)", "Deep ocean", `${r.MLO[yi].toFixed(0)} GtC`, "");
     el("path", { d: "M626 352V372", fill: "none", stroke: "var(--muted)", "stroke-width": 1.5, "marker-end": "url(#ar)" }, f.svg);
   } else box(516, 300, 220, 52, "var(--deepfill)", "var(--deep)", "Deep ocean", `${r.MLO[yi].toFixed(0)} GtC`, "");
   if (R.p.feedback) txt(f.svg, 24, 66, `Warming ${r.dT[yi].toFixed(2)} °C weakens ocean uptake`, { style: "fill:var(--fail);font-size:12px" });
   const flow = (d, label, lx, ly, anchor = "start") => { el("path", { d, fill: "none", stroke: "var(--muted)", "stroke-width": 1.5, "marker-end": "url(#ar)" }, f.svg); txt(f.svg, lx, ly, label, { "text-anchor": anchor, style: "fill:var(--ink);font-size:12px" }); };
   flow("M380 18V62", `emissions ${E.toFixed(2)} GtC/yr`, 392, 40);
-  flow("M300 142L170 218", `land uptake ${r.land[yi].toFixed(2)}`, 250, 196, "end");
+  flow("M300 142L170 218", `land uptake ${r.land[yi].toFixed(2)}`, 222, 176, "end");
   flow("M460 142L590 194", `ocean uptake ${r.ocean[yi].toFixed(2)}`, 540, 156);
   el("path", { d: "M626 274V298", fill: "none", stroke: "var(--muted)", "stroke-width": 1.5, "marker-end": "url(#ar)" }, f.svg);
   txt(f.svg, 500, 290, `mixing ${r.mix[yi].toFixed(2)}`, { "text-anchor": "end", style: "fill:var(--ink);font-size:12px" });
@@ -368,8 +467,8 @@ function drawChecks(R) {
     const used = (i === 5 && (presetIs("con") || presetIs("t3"))) ? ` <span class="pill info">used to set ${presetIs("t3") ? "k_1" : "k_d"}</span>` : "";
     return `<tr><td>${name}<br><span class="small">${src}</span></td><td class="num">${pub}</td><td class="num">${v.toFixed(dec)}${unit}</td><td><span class="pill ${ok ? "pass" : "fail"}">${ok ? "passes" : "misses"}</span>${used}</td></tr>`;
   }).join("");
-  $("checkNote").textContent = presetIs("con") ? "In Test 2, k_d was set from the ocean inventory and β from the 1960–1999 land sink. Every other row is a prediction, and the CO₂ record was never used." :
-    presetIs("t3") ? "In Test 3, k_1 was set from the ocean inventory, k_2 from the 600-year deep-water age and β from the 1960–1999 land sink. Every other row is a prediction, and the CO₂ record was never used." : "";
+  $("checkNote").textContent = presetIs("con") ? "In Version 2, two numbers were set from ocean and land data (marked \"used to set\"). Every other row is a genuine prediction. The CO₂ record was never used." :
+    presetIs("t3") ? "In Version 3, the model's rates were set from ocean and land data (the row marked \"used to set\", plus the deep-water age and land uptake). Every other row is a genuine prediction. The CO₂ record was never used." : "";
 }
 function presetIs(k) {
   const P = PRESETS[k], same = (a, b) => Math.abs(a - b) < 1e-9;
@@ -413,9 +512,9 @@ function labels() {
   $("endOut").textContent = $("endYear").value;
   const lit = presetIs("lit"), con = presetIs("con"), t3 = presetIs("t3");
   $("pLit").setAttribute("aria-pressed", lit); $("pCon").setAttribute("aria-pressed", con); $("pT3").setAttribute("aria-pressed", t3);
-  $("presetNote").textContent = lit ? "Test 1 uses only published physical rates. BEAM's mixing rate (0.05 per year) dates from Bolin & Eriksson (1959)." :
-    con ? "Test 2 sets deep-ocean mixing from the measured ocean carbon inventory (Sabine et al. 2004) and plant fertilization from the 1960–1999 land sink. Both use only ocean or land data, never the CO₂ record." :
-    t3 ? "Test 3 adds a thermocline. Its two mixing rates come from the 1994 ocean inventory and the radiocarbon age of deep water, and plant fertilization from the land sink. None of them uses the CO₂ record." : "Custom rates: you have moved a slider away from all three tests.";
+  $("presetNote").textContent = lit ? "Version 1 uses textbook numbers from 1959 (Bolin & Eriksson). Watch the CO₂ line overshoot the black dots." :
+    con ? "Version 2 sets the ocean's mixing speed from ship measurements of carbon in the ocean, and the plant response from land data. It never uses the CO₂ record." :
+    t3 ? "Version 3 adds a middle ocean layer. Its mixing speeds come from ocean measurements and radiocarbon dating of deep water. This is the best version, and it never uses the CO₂ record." : "Custom settings: you have changed a slider, so this isn't one of the three versions.";
 }
 function update() {
   labels();
@@ -479,4 +578,135 @@ $("fObs").addEventListener("change", e => { const file = e.target.files[0]; if (
 $("bReset").onclick = () => { OBS = { map: OBS_DEFAULT, name: "Mauna Loa" }; $("obsLegend").textContent = "Mauna Loa"; $("fObs").value = ""; $("mObs").textContent = "Using built-in Mauna Loa data (1959–2025)."; $("mObs").className = "msg"; update(); };
 
 update();
+
+/* ---------- Monte Carlo lab ---------- */
+const CAL = /*__CAL__*/;
+/*__MCJS__*/
+let mcLayers = 3, mcFB = false, worker = null, lastMC = null;
+const stat = (k, v) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+function mcCfg() {
+  const num = id => +$(id).value, on = id => $(id).checked;
+  return { n: num("mcN"), seed: Math.max(1, Math.floor(num("mcSeed"))), layers: mcLayers, feedback: mcFB, scenario: $("mcScen").value, endYear: 2100, dt: 0.02,
+    luc: { on: on("uLuc"), sd: num("uLucSd") / 100 }, fossil: { on: on("uFos"), sd: num("uFosSd") / 100 },
+    inv: { on: on("uInv"), mean: num("uInvM"), sd: num("uInvSd") },
+    age: { on: on("uAge") && mcLayers === 3, min: Math.min(num("uAgeMin"), num("uAgeMax")), max: Math.max(num("uAgeMin"), num("uAgeMax")) },
+    land: { on: on("uLand"), mean: num("uLandM"), sd: num("uLandSd") },
+    tcre: { on: on("uTcre") && mcFB, min: Math.min(num("uTcreMin"), num("uTcreMax")), max: Math.max(num("uTcreMin"), num("uTcreMax")) } };
+}
+function mcLabels() {
+  $("mcNOut").textContent = `${$("mcN").value} runs`;
+  $("mcL2").setAttribute("aria-pressed", mcLayers === 2); $("mcL3").setAttribute("aria-pressed", mcLayers === 3);
+  $("mcFB0").setAttribute("aria-pressed", !mcFB); $("mcFB1").setAttribute("aria-pressed", mcFB);
+  $("uAgeRow").style.opacity = mcLayers === 3 ? 1 : .45; $("uTcreRow").style.opacity = mcFB ? 1 : .45;
+}
+function mcStart() {
+  const cfg = mcCfg(); mcLabels();
+  $("mcRun").disabled = true; $("mcStop").hidden = false; $("mcProg").hidden = false; $("mcProg").value = 0;
+  $("mcStatus").textContent = `Running ${cfg.n} simulations…`;
+  const t0 = performance.now();
+  const done = res => { worker = null; $("mcRun").disabled = false; $("mcStop").hidden = true; $("mcProg").hidden = true;
+    $("mcStatus").textContent = `Finished ${res.n} runs in ${((performance.now() - t0) / 1000).toFixed(1)} s.`; lastMC = { cfg, res }; mcShow(cfg, res); };
+  try {
+    const src = $("workerSrc").textContent;
+    worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+    worker.onmessage = e => { if (e.data.progress) { $("mcProg").value = e.data.progress / cfg.n; $("mcStatus").textContent = `Run ${e.data.progress} of ${cfg.n}…`; } else done(e.data.result); };
+    worker.onerror = () => { worker && worker.terminate(); worker = null; runInPage(cfg, done); };
+    worker.postMessage({ cfg, D, CAL });
+  } catch (err) { runInPage(cfg, done); }
+}
+function runInPage(cfg, done) { $("mcStatus").textContent = `Running ${cfg.n} simulations in the page (this may pause it briefly)…`; setTimeout(() => done(runMC(cfg, D, CAL)), 30); }
+function mcStopRun() { if (worker) { worker.terminate(); worker = null; } $("mcRun").disabled = false; $("mcStop").hidden = true; $("mcProg").hidden = true; $("mcStatus").textContent = "Stopped."; }
+function pct(arr, p) { const a = Float64Array.from(arr).sort(); const i = (a.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return a[lo] + (a[hi] - a[lo]) * (i - lo); }
+function pearson(x, y) { const n = x.length; let mx = 0, my = 0; for (let i = 0; i < n; i++) { mx += x[i]; my += y[i]; } mx /= n; my /= n;
+  let sxy = 0, sxx = 0, syy = 0; for (let i = 0; i < n; i++) { const a = x[i] - mx, b = y[i] - my; sxy += a * b; sxx += a * a; syy += b * b; } return sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0; }
+function mcShow(cfg, R) {
+  $("mcResults").hidden = false;
+  const N = R.N, n = R.n, hist = cfg.scenario === "none", last = i => R.ppm[i * N + N - 1];
+  const target = hist ? Array.from({ length: n }, (_, j) => last(j)) : Array.from(R.peakVal);
+  const obs = 424.61, lo = pct(target, .05), md = pct(target, .5), hi = pct(target, .95);
+  const tiles = [];
+  if (hist) {
+    const below = target.filter(v => v < obs).length / n;
+    tiles.push(stat("CO₂ in 2024, median", `${md.toFixed(1)} ppm`), stat("90% of runs", `${lo.toFixed(0)}–${hi.toFixed(0)} ppm`),
+      stat("Measured (Mauna Loa)", `${obs.toFixed(1)} ppm`), stat("Runs below the measurement", `${(below * 100).toFixed(0)}%`));
+    const inside = obs >= lo && obs <= hi;
+    $("mcVerdict").innerHTML = inside ? `The measured 424.6 ppm is <span class="hl">inside</span> the model's 90% range. ${(below * 100).toFixed(0)}% of runs come out lower, so these uncertainties are enough to explain the gap.`
+      : `The measured 424.6 ppm is <span class="hl">outside</span> the model's 90% range (${lo.toFixed(0)}–${hi.toFixed(0)} ppm). With these uncertainties, the model can't explain the measurement.`;
+  } else {
+    const py = Array.from(R.peakYear), c2100 = Array.from({ length: n }, (_, j) => last(j));
+    const pyMed = pct(py, .5), stillRising = py.filter(y => y >= R.end).length / n;
+    tiles.push(stat("Peak CO₂, median", `${md.toFixed(0)} ppm`), stat("Peak CO₂, 90% of runs", `${lo.toFixed(0)}–${hi.toFixed(0)} ppm`),
+      stat("Peak year", stillRising > .5 ? `after ${R.end}` : `${pyMed.toFixed(0)} (${pct(py, .05).toFixed(0)}–${pct(py, .95).toFixed(0)})`),
+      stat(`CO₂ in ${R.end}`, `${pct(c2100, .5).toFixed(0)} (${pct(c2100, .05).toFixed(0)}–${pct(c2100, .95).toFixed(0)})`));
+    $("mcVerdict").innerHTML = stillRising > .5 ? `In ${(stillRising * 100).toFixed(0)}% of runs, CO₂ is still rising in ${R.end}.`
+      : `CO₂ peaks around <span class="hl">${pyMed.toFixed(0)}</span> at about <span class="hl">${md.toFixed(0)} ppm</span>, then falls. The model's 2024 starting point is about ${cfg.feedback ? 18 : 11} ppm above Mauna Loa, so read changes rather than exact values.`;
+  }
+  const lim = R.rates.atLimit.filter(Boolean).length / n;
+  if (lim > 0.005) tiles.push(stat("Runs at the fastest ocean mixing", `${(lim * 100).toFixed(0)}%`));
+  $("mcStats").innerHTML = tiles.join("");
+  drawMCChart(R, hist); drawHist(target, hist ? obs : null, hist ? "CO₂ in 2024 (ppm)" : "Peak CO₂ (ppm)"); drawCorr(cfg, R, target);
+}
+function drawMCChart(R, hist) {
+  const N = R.N, n = R.n, end = R.end, f = frame($("mcChart"), 900, 340, { l: 58, r: 16, t: 14, b: 30 });
+  const q = p => Array.from({ length: N }, (_, i) => { const col = new Float64Array(n); for (let j = 0; j < n; j++) col[j] = R.ppm[j * N + i]; col.sort(); const k = (n - 1) * p, a = Math.floor(k); return col[a] + (col[Math.ceil(k)] - col[a]) * (k - a); });
+  const p5 = q(.05), p25 = q(.25), p50 = q(.5), p75 = q(.75), p95 = q(.95);
+  const x0 = hist ? 1850 : 1950, i0 = x0 - 1850, xd = [x0, end];
+  const vals = [...p5.slice(i0), ...p95.slice(i0)], yd = [Math.floor((Math.min(...vals) - 5) / 20) * 20, Math.ceil((Math.max(...vals) + 5) / 20) * 20];
+  const xs = v => f.m.l + (v - xd[0]) / (xd[1] - xd[0]) * f.iw, ys = v => f.m.t + f.ih - (v - yd[0]) / (yd[1] - yd[0]) * f.ih;
+  axes(f, xs, ys, xd, yd, "CO₂ (ppm)");
+  const band = (a, b, fill) => { let d = "M"; for (let i = i0; i < N; i++) d += `${xs(1850 + i).toFixed(1)},${ys(b[i]).toFixed(1)}L`; for (let i = N - 1; i >= i0; i--) d += `${xs(1850 + i).toFixed(1)},${ys(a[i]).toFixed(1)}${i > i0 ? "L" : ""}`; el("path", { d: d + "Z", fill }, f.svg); };
+  band(p5, p95, "var(--band)"); band(p25, p75, "var(--band2)");
+  const cp = el("clipPath", { id: "mcClip" }, el("defs", {}, f.svg)); el("rect", { x: f.m.l, y: f.m.t, width: f.iw, height: f.ih }, cp);
+  const g = el("g", { "clip-path": "url(#mcClip)" }, f.svg), step = Math.max(1, Math.floor(n / 40));
+  for (let j = 0; j < n; j += step) line(Array.from({ length: N - i0 }, (_, k) => [xs(x0 + k), ys(R.ppm[j * N + i0 + k])]), { stroke: "var(--muted)", "stroke-width": .6, opacity: .35 }, g);
+  line(Array.from({ length: N - i0 }, (_, k) => [xs(x0 + k), ys(p50[i0 + k])]), { stroke: "var(--ocean)", "stroke-width": 2.5 }, f.svg);
+  if (end > 2024) el("line", { x1: xs(2024), x2: xs(2024), y1: f.m.t, y2: f.m.t + f.ih, stroke: "var(--muted)", "stroke-dasharray": "3 3" }, f.svg);
+  [...ICE].filter(([y]) => y >= x0).forEach(([y, v]) => el("circle", { cx: xs(y), cy: ys(v), r: 1.6, fill: "var(--obs)" }, f.svg));
+  [...OBS_DEFAULT].filter(([y]) => y >= x0 && y <= 2024).forEach(([y, v]) => el("circle", { cx: xs(y), cy: ys(v), r: 2.2, fill: "var(--obs)" }, f.svg));
+}
+function drawHist(vals, mark, label) {
+  const f = frame($("mcHist"), 440, 260, { l: 40, r: 10, t: 26, b: 34 });
+  const lo = Math.min(...vals, mark ?? Infinity), hi = Math.max(...vals, mark ?? -Infinity), nb = 30, w = (hi - lo) / nb || 1;
+  const counts = new Array(nb).fill(0); vals.forEach(v => counts[Math.min(nb - 1, Math.floor((v - lo) / w))]++);
+  const cmax = Math.max(...counts), xd = [lo, hi], yd = [0, cmax];
+  const xs = v => f.m.l + (v - xd[0]) / (xd[1] - xd[0]) * f.iw, ys = v => f.m.t + f.ih - v / cmax * f.ih;
+  txt(f.svg, f.m.l, 16, "How the runs spread", { style: "fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600" });
+  counts.forEach((c, i) => el("rect", { x: xs(lo + i * w) + .5, y: ys(c), width: Math.max(1, xs(lo + (i + 1) * w) - xs(lo + i * w) - 1), height: f.m.t + f.ih - ys(c), fill: "var(--ocean)", opacity: .7 }, f.svg));
+  for (const v of ticks(lo, hi, 4)) txt(f.svg, xs(v), f.H - f.m.b + 16, v, { "text-anchor": "middle" });
+  el("line", { x1: f.m.l, x2: f.W - f.m.r, y1: f.m.t + f.ih, y2: f.m.t + f.ih, stroke: "var(--muted)" }, f.svg);
+  txt(f.svg, f.m.l + f.iw / 2, f.H - 4, label, { "text-anchor": "middle" });
+  if (mark != null) { el("line", { x1: xs(mark), x2: xs(mark), y1: f.m.t, y2: f.m.t + f.ih, stroke: "var(--fossil)", "stroke-width": 2 }, f.svg); txt(f.svg, xs(mark) + 4, f.m.t + 10, "measured", { style: "fill:var(--fossil)" }); }
+}
+function drawCorr(cfg, R, target) {
+  const names = [["f_luc", "Land-use emissions", cfg.luc.on], ["f_fossil", "Fossil emissions", cfg.fossil.on], ["inventory", "Ocean carbon 1994", cfg.inv.on],
+    ["deep_age", "Deep-water age", cfg.age.on], ["land_target", "Land sink 1960–99", cfg.land.on], ["tcre", "Warming per 1000 GtC", cfg.tcre.on]].filter(r => r[2]);
+  const f = frame($("mcCorr"), 440, 260, { l: 150, r: 40, t: 26, b: 20 });
+  txt(f.svg, 10, 16, "Which input matters most (correlation)", { style: "fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600" });
+  if (!names.length) { txt(f.svg, 10, 60, "No inputs varied."); return; }
+  const rs = names.map(([k, l]) => [l, pearson(R.inp[k], target)]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const xs = v => f.m.l + (v + 1) / 2 * f.iw, bh = Math.min(26, f.ih / rs.length - 6);
+  el("line", { x1: xs(0), x2: xs(0), y1: f.m.t, y2: f.m.t + f.ih, stroke: "var(--muted)" }, f.svg);
+  rs.forEach(([l, r], i) => { const y = f.m.t + i * (bh + 6);
+    el("rect", { x: Math.min(xs(0), xs(r)), y, width: Math.abs(xs(r) - xs(0)), height: bh, fill: r > 0 ? "var(--fossil)" : "var(--ocean)", opacity: .8 }, f.svg);
+    txt(f.svg, f.m.l - 6, y + bh / 2 + 4, l, { "text-anchor": "end", style: "fill:var(--ink);font-size:11.5px" });
+    txt(f.svg, r >= 0 ? xs(r) + 4 : xs(r) - 4, y + bh / 2 + 4, r.toFixed(2), { "text-anchor": r >= 0 ? "start" : "end" }); });
+  txt(f.svg, xs(-1), f.H - 4, "−1: higher input, lower CO₂", {}); txt(f.svg, xs(1), f.H - 4, "+1", { "text-anchor": "end" });
+}
+function mcReset() {
+  const set = (id, v) => $(id).value = v;
+  ["uLuc", "uFos", "uInv", "uAge", "uLand", "uTcre"].forEach(id => $(id).checked = true);
+  set("uLucSd", 50); set("uFosSd", 5); set("uInvM", 118); set("uInvSd", 19); set("uAgeMin", 300); set("uAgeMax", 900);
+  set("uLandM", CAL.land6099.toFixed(2)); set("uLandSd", 0.8); set("uTcreMin", 1.4); set("uTcreMax", 2.2); set("mcN", 1000); set("mcSeed", 1);
+  mcLayers = 3; mcFB = false; $("mcScen").value = "none"; mcLabels();
+}
+$("mcRun").onclick = mcStart; $("mcStop").onclick = mcStopRun; $("mcReset").onclick = mcReset;
+$("mcL2").onclick = () => { mcLayers = 2; mcLabels(); }; $("mcL3").onclick = () => { mcLayers = 3; mcLabels(); };
+$("mcFB0").onclick = () => { mcFB = false; mcLabels(); }; $("mcFB1").onclick = () => { mcFB = true; mcLabels(); };
+$("mcN").addEventListener("input", mcLabels);
+mcLabels();
+</script>
+<script type="text/plain" id="workerSrc">
+/*__MODEL__*/
+/*__MCJS__*/
+onmessage = e => { const { cfg, D, CAL } = e.data; const res = runMC(cfg, D, CAL, k => postMessage({ progress: k })); postMessage({ result: res }); };
 </script>

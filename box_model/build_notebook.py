@@ -17,6 +17,18 @@ md("""# A mechanistic carbon-cycle box model
 4. **Test 2:** set the two least certain physical rates from *ocean* and *land* data alone, then predict the atmosphere, which is never used to set anything.
 5. Limitations.""")
 
+md("""### In plain words (start here)
+
+- **What this is.** A computer model of where the CO₂ we emit ends up: the air, the ocean or land plants. It's built from physics and chemistry. It is never tuned to the CO₂ measurements, so comparing it with them is a fair test.
+- **The three versions** (called Test 1, 2 and 3 below, and Version 1, 2 and 3 on the web page):
+    1. Textbook numbers from 1959. The ocean mixes too slowly, so CO₂ comes out 48 ppm too high.
+    2. Ocean mixing set from ship measurements of carbon in the ocean. CO₂ is close, but the ocean absorbs too much today.
+    3. A middle ocean layer is added. The ocean is right in both the past and the present, and CO₂ is within the uncertainty range.
+- **Extras.** Warming feedback (Section 9), uncertainty with 2,000 random runs (Section 10), future scenarios (Section 12), and what happens if emissions stop (Section 13).
+- **How to read it.** Each section has a short explanation, then code, then a chart or table. You can skip the code and read the text and charts.
+
+**Words used:** *ppm* is parts per million of CO₂ in air. *GtC* is billion tonnes of carbon (2.124 GtC = 1 ppm). A *sink* is the ocean or land taking CO₂ out of the air. The *thermocline* is the ocean's middle layer, 75–1,000 m deep. *Monte Carlo* means running the model many times with random inputs.""")
+
 code("""import numpy as np, pandas as pd, matplotlib.pyplot as plt
 from box_model import Params, params_at, chemistry_at, equilibrium_state, revelle_factor, GTC_PER_PPM
 from data_loader import gcb_budget, mauna_loa, noaa_global, observed_co2, ice_core_reconstruction
