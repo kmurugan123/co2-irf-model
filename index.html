@@ -65,6 +65,29 @@ details.glossary dt{font-weight:600}
 details.glossary dd{margin:0;color:var(--ink)}
 details.adv>.small,details.adv>.controls{padding:0 14px 14px}
 .steps-small{margin:0;padding-left:20px;font-size:14px;display:flex;flex-direction:column;gap:2px}
+.check{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink)}
+.validity{border:1px solid var(--rule);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.validity h3,#mcHistory h3{font-size:16px}
+.validity ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px}
+#mcHistory{display:flex;flex-direction:column;gap:8px}
+#mcHistory[hidden]{display:none}
+.results{border:2px solid var(--ocean);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;background:var(--panel)}
+.results h3{font-size:20px}
+.res-label{display:block;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.res-q p{font-size:16px;max-width:none}
+.res-a{border-radius:8px;padding:10px 12px}
+.res-a p{font-size:17px;max-width:none}
+.res-a.good{background:rgba(47,125,79,.10)} .res-a.bad{background:rgba(178,59,59,.10)}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.res-grid>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+.res-grid p{font-size:14px}
+.split{display:flex;height:30px;border-radius:6px;overflow:hidden}
+.split span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden}
+.details-h{font-size:16px;margin-top:6px;border-top:1px solid var(--rule);padding-top:12px}
+.explain{background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.explain h3{font-size:17px}
+.explain p{font-size:14.5px;max-width:75ch}
+.explain ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:5px;font-size:14.5px;max-width:75ch}
 .verdict{font-size:16px;font-weight:500;max-width:none}
 .hl{font-family:var(--f-mono)}
 .chart{width:100%;overflow-x:auto}
@@ -213,7 +236,19 @@ code{font-family:var(--f-mono);font-size:12.5px}
 <section class="card" aria-labelledby="h-lab" id="lab">
   <span class="eyebrow">Try it yourself</span>
   <h2 id="h-lab">Uncertainty lab: run the model thousands of times</h2>
-  <ol class="steps-small"><li>Tick the inputs you think are uncertain, and say how uncertain they are.</li><li>Press <b>Run experiment</b>.</li><li>Read the result: is the real measurement inside the model's range, and which input matters most?</li></ol>
+  <div class="explain">
+    <h3>What this experiment does</h3>
+    <p><b>The problem:</b> the model needs some numbers that scientists only know roughly, such as how much CO₂ came from clearing forests. If we guess one value, we get one answer, but we don't know how far off it could be.</p>
+    <p><b>The experiment:</b> run the model many times, each time with a different guess for those uncertain numbers, and see how much the answer changes.</p>
+    <ol>
+      <li><b>Pick random values</b> for each uncertain input you tick below, within the range scientists have measured. For example, forest-clearing emissions might be 30% higher in one run and 20% lower in the next.</li>
+      <li><b>Run the model</b> from 1850 to 2024 using real yearly emissions. Each year it adds the emissions to the air, then moves carbon into the ocean and into plants using physics and chemistry.</li>
+      <li><b>Record the result:</b> how much CO₂ is in the air in 2024, and where the emitted carbon ended up (air, ocean or land).</li>
+      <li><b>Repeat</b> 2,000 times, each with new random values.</li>
+      <li><b>Compare the range of answers with reality.</b> If the real measured CO₂ (424.6 ppm) falls inside the range, the model is consistent with reality.</li>
+    </ol>
+    <p class="small"><b>What it never does:</b> look at the measured CO₂ while setting up the runs. That's what makes the comparison at the end a fair test. If you pick a future scenario instead, each run continues to 2100, and the result is when and how high CO₂ peaks.</p>
+  </div>
   <div class="controls">
     <div class="group-title">Model</div>
     <div class="ctl"><label>Ocean layers</label><div class="seg" role="group" aria-label="Ocean layers for the experiment"><button id="mcL2" type="button" aria-pressed="false">2 layers</button><button id="mcL3" type="button" aria-pressed="true">3 layers</button></div></div>
@@ -232,22 +267,40 @@ code{font-family:var(--f-mono);font-size:12.5px}
     <div class="ctl"><label><span><input type="checkbox" id="uLand" checked> Land sink 1960–1999</span></label><div class="pair"><input id="uLandM" type="number" step="0.05" value="1.47"><span>±</span><input id="uLandSd" type="number" min="0" step="0.05" value="0.8"><span>GtC/yr</span></div><span class="hint">How much carbon land absorbed (Global Carbon Budget). Sets how strongly plants respond to CO₂.</span></div>
     <div class="ctl" id="uTcreRow"><label><span><input type="checkbox" id="uTcre" checked> Warming per 1000 GtC</span></label><div class="pair"><input id="uTcreMin" type="number" step="0.1" value="1.4"><span>to</span><input id="uTcreMax" type="number" step="0.1" value="2.2"><span>°C</span></div><span class="hint">IPCC range. Only used when warming feedback is on.</span></div>
     <div class="group-title">Runs</div>
-    <div class="ctl"><label for="mcN">Number of runs <output id="mcNOut"></output></label><input id="mcN" type="range" min="100" max="3000" step="100" value="1000"></div>
-    <div class="ctl"><label for="mcSeed">Random seed</label><input id="mcSeed" type="number" min="1" step="1" value="1" class="sel"><span class="hint">Same seed and settings give the same result.</span></div>
+    <div class="ctl"><label for="mcN">Number of runs <output id="mcNOut"></output></label><input id="mcN" type="range" min="100" max="3000" step="100" value="2000"></div>
+    <div class="ctl"><label for="mcSeed">Random seed</label>
+      <label class="check"><input type="checkbox" id="mcAutoSeed" checked> New random seed every run</label>
+      <input id="mcSeed" type="number" min="1" step="1" value="1" class="sel" aria-label="Random seed">
+      <span class="hint">Each run picks a fresh seed and shows it here. Untick to repeat a past experiment exactly by typing its seed.</span></div>
   </div>
   <div class="runbar">
     <button id="mcRun" class="btn primary" type="button">Run experiment</button>
     <button id="mcStop" class="btn" type="button" hidden>Stop</button>
+    <button id="mcRepeat" class="btn" type="button">Repeat 5 times</button>
     <button id="mcReset" class="btn" type="button">Reset to published ranges</button>
     <progress id="mcProg" max="1" value="0" hidden></progress>
     <span class="small" id="mcStatus" role="status"></span>
   </div>
   <div id="mcResults" hidden>
+    <div class="results" id="mcSummary"></div>
+    <h3 class="details-h">Details</h3>
     <p class="verdict" id="mcVerdict"></p>
     <div class="stats" id="mcStats"></div>
     <div class="chart" id="mcChart"></div>
     <div class="legend"><span><i class="sw" style="background:var(--band)"></i>90% of runs</span><span><i class="sw" style="background:var(--band2)"></i>middle 50%</span><span><i class="sw" style="background:var(--ocean)"></i>median</span><span><i class="sw" style="background:var(--muted);height:2px"></i>sample runs</span><span><i class="dot" style="background:var(--obs)"></i>measured</span></div>
     <div class="two"><div class="chart" id="mcHist"></div><div class="chart" id="mcCorr"></div></div>
+    <div class="validity">
+      <h3>Is this experiment valid?</h3>
+      <ul id="mcChecks"></ul>
+      <div class="chart" id="mcConv"></div>
+    </div>
+  </div>
+  <div id="mcHistory" hidden>
+    <h3>Your experiments</h3>
+    <p class="small">Every experiment you run is listed here. With different seeds, the results should agree closely. If they do, the answer comes from the model and its inputs, not from luck.</p>
+    <div class="tablewrap"><table><thead><tr><th>#</th><th>Seed</th><th>Runs</th><th>Setup</th><th>Median</th><th>90% range</th><th id="hCol">Detail</th><th>Settled?</th></tr></thead><tbody id="mcHistRows"></tbody></table></div>
+    <p class="small" id="mcHistNote"></p>
+    <button id="mcClear" class="btn" type="button" style="align-self:flex-start">Clear the list</button>
   </div>
 </section>
 
@@ -709,6 +762,7 @@ function runMC(cfg, D, CAL, onProgress) {
   const inp = { f_luc: [], f_fossil: [], inventory: [], deep_age: [], land_target: [], tcre: [] };
   const rates = { k1: [], k2: [], k_d: [], beta: [], atLimit: [] };
   const peakYear = new Float32Array(n), peakVal = new Float32Array(n);
+  const share = { air: new Float32Array(n), ocean: new Float32Array(n), land: new Float32Array(n) };   // of 1850-2024 emissions
   for (let j = 0; j < n; j++) {
     const fl = cfg.luc.on ? Math.max(0, rng.normal(1, cfg.luc.sd)) : 1;
     const ff = cfg.fossil.on ? rng.normal(1, cfg.fossil.sd) : 1;
@@ -731,10 +785,12 @@ function runMC(cfg, D, CAL, onProgress) {
     let pk = 0;
     for (let i = 0; i < N; i++) { ppm[j * N + i] = r.ppm[i]; if (r.ppm[i] > r.ppm[pk]) pk = i; }
     peakYear[j] = 1850 + pk; peakVal[j] = r.ppm[pk]; dT[j] = r.dT[N - 1];
+    let eT = 0, oT = 0, lT = 0; for (let i = 0; i < Math.min(175, N); i++) { eT += Ef[i] + El[i]; oT += r.ocean[i]; lT += r.land[i]; }
+    share.ocean[j] = oT / eT; share.land[j] = lT / eT; share.air[j] = 1 - share.ocean[j] - share.land[j];
     inp.f_luc.push(fl); inp.f_fossil.push(ff); inp.inventory.push(inv); inp.deep_age.push(age); inp.land_target.push(land); inp.tcre.push(tcre); rates.beta.push(beta);
     if (onProgress && (j % 25 === 24 || j === n - 1)) onProgress(j + 1);
   }
-  return { n, N, end, ppm, peakYear, peakVal, dT, inp, rates };
+  return { n, N, end, ppm, peakYear, peakVal, dT, inp, rates, share };
 }
 if (typeof module !== "undefined") module.exports = { runMC, makeRng, interp, k1For, kdFor, betaFor };
 
@@ -755,13 +811,20 @@ function mcLabels() {
   $("mcFB0").setAttribute("aria-pressed", !mcFB); $("mcFB1").setAttribute("aria-pressed", mcFB);
   $("uAgeRow").style.opacity = mcLayers === 3 ? 1 : .45; $("uTcreRow").style.opacity = mcFB ? 1 : .45;
 }
+function newSeed() {
+  try { const a = new Uint32Array(1); crypto.getRandomValues(a); return 1 + (a[0] % 2147483646); }
+  catch (e) { return 1 + Math.floor(Math.random() * 2147483646); }
+}
+let repeatLeft = 0, history = [];
 function mcStart() {
+  if ($("mcAutoSeed").checked) $("mcSeed").value = newSeed();
   const cfg = mcCfg(); mcLabels();
   $("mcRun").disabled = true; $("mcStop").hidden = false; $("mcProg").hidden = false; $("mcProg").value = 0;
   $("mcStatus").textContent = `Running ${cfg.n} simulations…`;
   const t0 = performance.now();
   const done = res => { worker = null; $("mcRun").disabled = false; $("mcStop").hidden = true; $("mcProg").hidden = true;
-    $("mcStatus").textContent = `Finished ${res.n} runs in ${((performance.now() - t0) / 1000).toFixed(1)} s.`; lastMC = { cfg, res }; mcShow(cfg, res); };
+    $("mcStatus").textContent = `Finished ${res.n} runs in ${((performance.now() - t0) / 1000).toFixed(1)} s with seed ${cfg.seed}.`; lastMC = { cfg, res }; mcShow(cfg, res);
+    if (repeatLeft > 0) { repeatLeft--; $("mcAutoSeed").checked = true; setTimeout(mcStart, 50); } };
   try {
     const src = $("workerSrc").textContent;
     worker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
@@ -801,6 +864,11 @@ function mcShow(cfg, R) {
   if (lim > 0.005) tiles.push(stat("Runs at the fastest ocean mixing", `${(lim * 100).toFixed(0)}%`));
   $("mcStats").innerHTML = tiles.join("");
   drawMCChart(R, hist); drawHist(target, hist ? obs : null, hist ? "CO₂ in 2024 (ppm)" : "Peak CO₂ (ppm)"); drawCorr(cfg, R, target);
+  const v = validity(target, cfg, R);
+  drawSummary(cfg, R, target, v);
+  history.push({ seed: cfg.seed, n, setup: `${cfg.layers} layers, warming ${cfg.feedback ? "on" : "off"}, ${$("mcScen").selectedOptions[0].textContent.replace(/, to 2100|: test against 2024/, "")}`,
+    med: md, lo, hi, detail: hist ? `${(target.filter(x => x < obs).length / n * 100).toFixed(0)}% below measured` : (() => { const py = Array.from(R.peakYear); return `peak ${pct(py, .5).toFixed(0)}`; })(), settled: v.settled });
+  drawHistory();
 }
 function drawMCChart(R, hist) {
   const N = R.N, n = R.n, end = R.end, f = frame($("mcChart"), 900, 340, { l: 58, r: 16, t: 14, b: 30 });
@@ -848,14 +916,104 @@ function drawCorr(cfg, R, target) {
     txt(f.svg, r >= 0 ? xs(r) + 4 : xs(r) - 4, y + bh / 2 + 4, r.toFixed(2), { "text-anchor": r >= 0 ? "start" : "end" }); });
   txt(f.svg, xs(-1), f.H - 4, "−1: higher input, lower CO₂", {}); txt(f.svg, xs(1), f.H - 4, "+1", { "text-anchor": "end" });
 }
+/* Plain-language results summary shown right after a run */
+const INPUT_NAMES = { f_luc: ["Land-use emissions", "how much CO₂ came from clearing forests"], f_fossil: ["Fossil emissions", "how much CO₂ came from burning fuel"],
+  inventory: ["Ocean carbon by 1994", "how much carbon the ocean had absorbed by 1994"], deep_age: ["Deep-water age", "how fast the deep ocean mixes"],
+  land_target: ["Land sink 1960–99", "how much carbon plants absorbed"], tcre: ["Warming per tonne", "how much warming each tonne of CO₂ causes"] };
+function drawSummary(cfg, R, target, v) {
+  const n = R.n, hist = cfg.scenario === "none", obs = 424.61;
+  const lo = pct(target, .05), md = pct(target, .5), hi = pct(target, .95);
+  const sh = k => [pct(R.share[k], .5) * 100, pct(R.share[k], .05) * 100, pct(R.share[k], .95) * 100];
+  const air = sh("air"), oce = sh("ocean"), lan = sh("land");
+  const keys = { f_luc: cfg.luc.on, f_fossil: cfg.fossil.on, inventory: cfg.inv.on, deep_age: cfg.age.on, land_target: cfg.land.on, tcre: cfg.tcre.on };
+  const ranked = Object.keys(keys).filter(k => keys[k]).map(k => [k, Math.abs(pearson(R.inp[k], target))]).sort((a, b) => b[1] - a[1]);
+  const top = ranked[0], second = ranked[1];
+  let question, answer, ok;
+  if (hist) {
+    const inside = obs >= lo && obs <= hi;
+    question = "Can the model reproduce the CO₂ measured in 2024, given what scientists don't know exactly?";
+    answer = inside ? `<b>Yes.</b> Across ${n} runs, the model predicts <b>${lo.toFixed(0)}–${hi.toFixed(0)} ppm</b> (most likely about ${md.toFixed(0)}). The real measurement, <b>424.6 ppm</b>, falls inside that range.`
+      : `<b>No.</b> Across ${n} runs, the model predicts <b>${lo.toFixed(0)}–${hi.toFixed(0)} ppm</b>, but the real measurement, <b>424.6 ppm</b>, falls outside that range.`;
+    ok = inside;
+  } else {
+    const py = Array.from(R.peakYear), rising = py.filter(y => y >= R.end).length / n, c2100 = Array.from({ length: n }, (_, j) => R.ppm[j * R.N + R.N - 1]);
+    const name = $("mcScen").selectedOptions[0].textContent.replace(/, to 2100/, "").toLowerCase();
+    question = `If emissions are ${name.replace(/^held/, "held").replace(/^stop/, "stopped")}, when does CO₂ stop rising, and how high does it get?`;
+    answer = rising > .5 ? `<b>It doesn't stop before 2100.</b> In ${(rising * 100).toFixed(0)}% of runs CO₂ is still rising in 2100, reaching <b>${pct(c2100, .05).toFixed(0)}–${pct(c2100, .95).toFixed(0)} ppm</b>.`
+      : `<b>CO₂ peaks around ${pct(py, .5).toFixed(0)}</b> (${pct(py, .05).toFixed(0)}–${pct(py, .95).toFixed(0)}) at <b>${lo.toFixed(0)}–${hi.toFixed(0)} ppm</b>, then falls to about ${pct(c2100, .5).toFixed(0)} ppm by 2100.`;
+    ok = true;
+  }
+  const bar = `<div class="split" role="img" aria-label="Air ${air[0].toFixed(0)}%, ocean ${oce[0].toFixed(0)}%, land ${lan[0].toFixed(0)}%">
+      <span style="width:${air[0]}%;background:var(--fossil)">Air ${air[0].toFixed(0)}%</span><span style="width:${oce[0]}%;background:var(--ocean)">Ocean ${oce[0].toFixed(0)}%</span><span style="width:${lan[0]}%;background:var(--landc)">Land ${lan[0].toFixed(0)}%</span></div>`;
+  $("mcSummary").innerHTML = `
+    <h3>Results</h3>
+    <div class="res-q"><span class="res-label">Question</span><p>${question}</p></div>
+    <div class="res-a ${ok ? "good" : "bad"}"><span class="res-label">Answer</span><p>${answer}</p></div>
+    <div class="res-grid">
+      <div><span class="res-label">Where the CO₂ emitted since 1850 went (typical run)</span>${bar}
+        <p class="small">Of every 100 tonnes of carbon emitted from 1850 to 2024, about <b>${air[0].toFixed(0)}</b> stayed in the air, <b>${oce[0].toFixed(0)}</b> went into the ocean and <b>${lan[0].toFixed(0)}</b> into land plants and soils. Across runs: air ${air[1].toFixed(0)}–${air[2].toFixed(0)}%, ocean ${oce[1].toFixed(0)}–${oce[2].toFixed(0)}%, land ${lan[1].toFixed(0)}–${lan[2].toFixed(0)}%.</p></div>
+      <div><span class="res-label">What causes most of the uncertainty</span>
+        <p>${top ? `<b>${INPUT_NAMES[top[0]][0]}</b>: ${INPUT_NAMES[top[0]][1]}.${second ? ` Next: <b>${INPUT_NAMES[second[0]][0].toLowerCase()}</b>.` : ""} Measuring ${top[0] === "f_luc" || top[0] === "land_target" ? "land carbon" : "this"} better would narrow the answer the most.` : "No inputs were varied, so every run is the same."}</p></div>
+      <div><span class="res-label">Can you trust this result?</span>
+        <p>${v.settled ? `<b>Yes.</b> The answer stopped changing as runs were added, and the first and second halves of the runs agree. Press <b>Repeat 5 times</b> to confirm with other seeds.` : `<b>Not yet.</b> The answer was still shifting, so increase the number of runs and run again.`}</p></div>
+    </div>`;
+}
+/* Validity checks: does the answer settle down as runs accumulate, and do two independent halves agree? */
+function validity(target, cfg, R) {
+  const n = target.length, unit = "ppm";
+  const steps = Array.from({ length: 20 }, (_, i) => Math.max(20, Math.round(n * (i + 1) / 20)));
+  const conv = steps.map(k => { const a = target.slice(0, k); return [k, pct(a, .05), pct(a, .5), pct(a, .95)]; });
+  const lastQ = conv.filter(c => c[0] >= 0.75 * n), drift = Math.max(...[1, 2, 3].map(j => Math.max(...lastQ.map(c => c[j])) - Math.min(...lastQ.map(c => c[j]))));
+  const h1 = target.slice(0, Math.floor(n / 2)), h2 = target.slice(Math.floor(n / 2));
+  const dMed = Math.abs(pct(h1, .5) - pct(h2, .5)), dLo = Math.abs(pct(h1, .05) - pct(h2, .05)), dHi = Math.abs(pct(h1, .95) - pct(h2, .95));
+  let bs = []; for (let b = 0; b < 200; b++) { const s2 = new Float64Array(n); for (let i = 0; i < n; i++) s2[i] = target[Math.floor(Math.random() * n)]; bs.push(pct(s2, .5)); }
+  const se = (pct(bs, .975) - pct(bs, .025)) / 2;
+  const settled = drift < 3 && dMed < 5;
+  const lim = R.rates.atLimit.filter(Boolean).length / n;
+  const varied = ["luc", "fossil", "inv", "age", "land", "tcre"].filter(k => cfg[k].on).length;
+  const items = [
+    [true, `<b>Independent random draws.</b> Seed ${cfg.seed}. Each of the ${n} runs drew its ${varied} uncertain input${varied === 1 ? "" : "s"} at random, independently of the other runs.`],
+    [settled, settled ? `<b>The answer has settled.</b> Over the last quarter of the runs, the median and the 90% range moved by less than ${Math.max(drift, 0.1).toFixed(1)} ${unit}.`
+      : `<b>Not settled yet.</b> The range was still moving by ${drift.toFixed(1)} ${unit} near the end. Use more runs.`],
+    [dMed < 5, `<b>Two halves agree.</b> Runs 1–${h1.length} and ${h1.length + 1}–${n}, treated as separate experiments, have medians ${dMed.toFixed(1)} ${unit} apart and 90% ranges within ${Math.max(dLo, dHi).toFixed(1)} ${unit}.`],
+    [se < 3, `<b>Precision of the median:</b> ± ${se.toFixed(1)} ${unit} (95% bootstrap interval). More runs make this smaller.`],
+    [lim < 0.15, lim < 0.005 ? "<b>All runs physically possible.</b> No run hit a model limit." : `<b>${(lim * 100).toFixed(0)}% of runs hit the model's fastest ocean mixing.</b> Their drawn ocean data asked for more uptake than the model can give. They are kept, at that limit.`],
+    [varied > 0, varied > 0 ? "<b>Nothing was tuned to the CO₂ record.</b> Each run sets its rates from its own drawn ocean and land data." : "<b>No inputs are varied,</b> so every run is identical. Tick at least one input."],
+  ];
+  $("mcChecks").innerHTML = items.map(([ok, t]) => `<li><span class="pill ${ok ? "pass" : "fail"}">${ok ? "✓" : "!"}</span> ${t}</li>`).join("");
+  drawConv(conv, cfg.scenario === "none" ? "CO₂ in 2024 (ppm)" : "Peak CO₂ (ppm)");
+  return { settled };
+}
+function drawConv(conv, label) {
+  const f = frame($("mcConv"), 900, 220, { l: 58, r: 90, t: 26, b: 30 });
+  const xd = [0, conv[conv.length - 1][0]], vals = conv.flatMap(c => c.slice(1)), yd = [Math.floor(Math.min(...vals) / 10) * 10 - 5, Math.ceil(Math.max(...vals) / 10) * 10 + 5];
+  const xs = v => f.m.l + (v - xd[0]) / (xd[1] - xd[0]) * f.iw, ys = v => f.m.t + f.ih - (v - yd[0]) / (yd[1] - yd[0]) * f.ih;
+  axes(f, xs, ys, xd, yd, "ppm", 5);
+  txt(f.svg, f.m.l, 16, "Does the answer settle down as runs are added?", { style: "fill:var(--ink);font-family:var(--f-body);font-size:13px;font-weight:600" });
+  [[1, "5%", "var(--muted)"], [2, "median", "var(--ocean)"], [3, "95%", "var(--muted)"]].forEach(([j, name, col]) => {
+    line(conv.map(c => [xs(c[0]), ys(c[j])]), { stroke: col, "stroke-width": j === 2 ? 2.5 : 1.5 }, f.svg);
+    const lastC = conv[conv.length - 1]; txt(f.svg, xs(lastC[0]) + 6, ys(lastC[j]) + 4, `${name} ${lastC[j].toFixed(0)}`); });
+  txt(f.svg, f.m.l + f.iw / 2, f.H - 2, "number of runs so far", { "text-anchor": "middle" });
+}
+function drawHistory() {
+  $("mcHistory").hidden = history.length === 0;
+  $("mcHistRows").innerHTML = history.map((h, i) => `<tr><td>${i + 1}</td><td class="num">${h.seed}</td><td class="num">${h.n}</td><td>${h.setup}</td>
+    <td class="num">${h.med.toFixed(1)}</td><td class="num">${h.lo.toFixed(0)}–${h.hi.toFixed(0)}</td><td>${h.detail}</td><td><span class="pill ${h.settled ? "pass" : "fail"}">${h.settled ? "yes" : "more runs"}</span></td></tr>`).join("");
+  const same = history.filter(h => h.setup === history[history.length - 1].setup);
+  if (same.length >= 2) { const meds = same.map(h => h.med); const spread = Math.max(...meds) - Math.min(...meds);
+    $("mcHistNote").textContent = `${same.length} experiments with this setup and different seeds: their medians differ by at most ${spread.toFixed(1)} ppm. ${spread < 5 ? "The result is reproducible." : "Use more runs for a steadier result."}`; }
+  else $("mcHistNote").textContent = "Run the same setup again, or press \"Repeat 5 times\", to check that the result doesn't depend on the seed.";
+}
 function mcReset() {
   const set = (id, v) => $(id).value = v;
   ["uLuc", "uFos", "uInv", "uAge", "uLand", "uTcre"].forEach(id => $(id).checked = true);
   set("uLucSd", 50); set("uFosSd", 5); set("uInvM", 118); set("uInvSd", 19); set("uAgeMin", 300); set("uAgeMax", 900);
-  set("uLandM", CAL.land6099.toFixed(2)); set("uLandSd", 0.8); set("uTcreMin", 1.4); set("uTcreMax", 2.2); set("mcN", 1000); set("mcSeed", 1);
+  set("uLandM", CAL.land6099.toFixed(2)); set("uLandSd", 0.8); set("uTcreMin", 1.4); set("uTcreMax", 2.2); set("mcN", 2000); $("mcAutoSeed").checked = true;
   mcLayers = 3; mcFB = false; $("mcScen").value = "none"; mcLabels();
 }
-$("mcRun").onclick = mcStart; $("mcStop").onclick = mcStopRun; $("mcReset").onclick = mcReset;
+$("mcRun").onclick = mcStart; $("mcStop").onclick = () => { repeatLeft = 0; mcStopRun(); }; $("mcReset").onclick = mcReset;
+$("mcRepeat").onclick = () => { repeatLeft = 4; $("mcAutoSeed").checked = true; mcStart(); };
+$("mcClear").onclick = () => { history = []; drawHistory(); };
 $("mcL2").onclick = () => { mcLayers = 2; mcLabels(); }; $("mcL3").onclick = () => { mcLayers = 3; mcLabels(); };
 $("mcFB0").onclick = () => { mcFB = false; mcLabels(); }; $("mcFB1").onclick = () => { mcFB = true; mcLabels(); };
 $("mcN").addEventListener("input", mcLabels);
@@ -991,6 +1149,7 @@ function runMC(cfg, D, CAL, onProgress) {
   const inp = { f_luc: [], f_fossil: [], inventory: [], deep_age: [], land_target: [], tcre: [] };
   const rates = { k1: [], k2: [], k_d: [], beta: [], atLimit: [] };
   const peakYear = new Float32Array(n), peakVal = new Float32Array(n);
+  const share = { air: new Float32Array(n), ocean: new Float32Array(n), land: new Float32Array(n) };   // of 1850-2024 emissions
   for (let j = 0; j < n; j++) {
     const fl = cfg.luc.on ? Math.max(0, rng.normal(1, cfg.luc.sd)) : 1;
     const ff = cfg.fossil.on ? rng.normal(1, cfg.fossil.sd) : 1;
@@ -1013,10 +1172,12 @@ function runMC(cfg, D, CAL, onProgress) {
     let pk = 0;
     for (let i = 0; i < N; i++) { ppm[j * N + i] = r.ppm[i]; if (r.ppm[i] > r.ppm[pk]) pk = i; }
     peakYear[j] = 1850 + pk; peakVal[j] = r.ppm[pk]; dT[j] = r.dT[N - 1];
+    let eT = 0, oT = 0, lT = 0; for (let i = 0; i < Math.min(175, N); i++) { eT += Ef[i] + El[i]; oT += r.ocean[i]; lT += r.land[i]; }
+    share.ocean[j] = oT / eT; share.land[j] = lT / eT; share.air[j] = 1 - share.ocean[j] - share.land[j];
     inp.f_luc.push(fl); inp.f_fossil.push(ff); inp.inventory.push(inv); inp.deep_age.push(age); inp.land_target.push(land); inp.tcre.push(tcre); rates.beta.push(beta);
     if (onProgress && (j % 25 === 24 || j === n - 1)) onProgress(j + 1);
   }
-  return { n, N, end, ppm, peakYear, peakVal, dT, inp, rates };
+  return { n, N, end, ppm, peakYear, peakVal, dT, inp, rates, share };
 }
 if (typeof module !== "undefined") module.exports = { runMC, makeRng, interp, k1For, kdFor, betaFor };
 

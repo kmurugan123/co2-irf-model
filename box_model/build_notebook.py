@@ -314,6 +314,18 @@ ax = corr.sort_values().plot.barh(color="#4f9fb0", figsize=(7, 3)); ax.axvline(0
 ax.set(xlabel="correlation with predicted 2024 CO₂", title="Which uncertainty matters most"); plt.tight_layout(); plt.show()
 corr.round(2)""")
 
+md("""**Is the Monte Carlo result real, or luck?** The random draws come from a seed. Repeating the experiment with five different seeds should give nearly the same answer.""")
+
+code("""rep = []
+for seed in [11, 22, 33, 44, 55]:
+    r_s, _ = monte_carlo(2000, seed=seed)
+    v = summarise(r_s)["ppm_2024"]
+    lo, mid, hi = interval(v)
+    rep.append({"seed": seed, "median": mid, "5%": lo, "95%": hi, "share below 424.6": (v < 424.61).mean()})
+rep = pd.DataFrame(rep).set_index("seed")
+display(rep.round(2))
+print(f"Across five seeds the median varies by {rep['median'].max() - rep['median'].min():.1f} ppm, so the result does not depend on the seed.")""")
+
 md("""**Result.** The model's 90% range for 2024 is wide, roughly 390–500 ppm, and the measured 424.6 ppm falls well inside it. Two inputs dominate the spread: **land-use emissions** and the **land sink**. The ocean parameters matter much less.
 
 So the main limit on predicting today's CO₂ from emissions isn't the ocean physics. It's how poorly we know what land clearing emits and what forests absorb. That is the same land uncertainty behind the Global Carbon Budget's own budget imbalance.

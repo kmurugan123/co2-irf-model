@@ -35,6 +35,7 @@ function runMC(cfg, D, CAL, onProgress) {
   const inp = { f_luc: [], f_fossil: [], inventory: [], deep_age: [], land_target: [], tcre: [] };
   const rates = { k1: [], k2: [], k_d: [], beta: [], atLimit: [] };
   const peakYear = new Float32Array(n), peakVal = new Float32Array(n);
+  const share = { air: new Float32Array(n), ocean: new Float32Array(n), land: new Float32Array(n) };   // of 1850-2024 emissions
   for (let j = 0; j < n; j++) {
     const fl = cfg.luc.on ? Math.max(0, rng.normal(1, cfg.luc.sd)) : 1;
     const ff = cfg.fossil.on ? rng.normal(1, cfg.fossil.sd) : 1;
@@ -57,9 +58,11 @@ function runMC(cfg, D, CAL, onProgress) {
     let pk = 0;
     for (let i = 0; i < N; i++) { ppm[j * N + i] = r.ppm[i]; if (r.ppm[i] > r.ppm[pk]) pk = i; }
     peakYear[j] = 1850 + pk; peakVal[j] = r.ppm[pk]; dT[j] = r.dT[N - 1];
+    let eT = 0, oT = 0, lT = 0; for (let i = 0; i < Math.min(175, N); i++) { eT += Ef[i] + El[i]; oT += r.ocean[i]; lT += r.land[i]; }
+    share.ocean[j] = oT / eT; share.land[j] = lT / eT; share.air[j] = 1 - share.ocean[j] - share.land[j];
     inp.f_luc.push(fl); inp.f_fossil.push(ff); inp.inventory.push(inv); inp.deep_age.push(age); inp.land_target.push(land); inp.tcre.push(tcre); rates.beta.push(beta);
     if (onProgress && (j % 25 === 24 || j === n - 1)) onProgress(j + 1);
   }
-  return { n, N, end, ppm, peakYear, peakVal, dT, inp, rates };
+  return { n, N, end, ppm, peakYear, peakVal, dT, inp, rates, share };
 }
 if (typeof module !== "undefined") module.exports = { runMC, makeRng, interp, k1For, kdFor, betaFor };
