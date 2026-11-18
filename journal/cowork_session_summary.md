@@ -1,4 +1,4 @@
-# Cowork session summary (Oct 30 – Nov 10, 2026)
+# Cowork session summary (Oct 30 – Nov 12, 2026)
 
 This work was done in a Claude app (Cowork) session, so it isn't captured in the automatic Claude Code logs.
 Claude wrote this summary at my request. It is a summary, not a transcript. Session link: https://claude.ai/code/session_01ULYh5MPzGSCSWTC1CLAhSi
@@ -42,6 +42,23 @@ Claude wrote this summary at my request. It is a summary, not a transcript. Sess
 - **I asked for:** a button to start a Monte Carlo experiment with my own parameter choices and show the results. Added to the web page as an "uncertainty lab". It gives the same answers as the Python version.
 - **I asked to:** make the whole project easier to understand. Added plain-language summaries, a glossary, renamed the versions, simpler controls (physics moved under "Advanced"), and plain-language sections in the README and notebook.
 - **Journal:** this summary and `chat_links.md`.
+
+## November 12: making the experiment random, valid and understandable
+
+- **I asked:** why the Monte Carlo result was the same every time, even with seed 2. Answer: the physics is deterministic, and a fixed seed always gives the same "random" draws. Each seed gives its own fixed set.
+- **I asked for:** everything random and the experiment actually valid. Added to the lab:
+  - a fresh random seed for every run (shown, so any run can be repeated exactly)
+  - a "Repeat 5 times" button and a table of all my experiments
+  - validity checks after each run: independent draws, whether the answer settled as runs were added, whether the two halves agree, the precision of the median, runs at a model limit, and no tuning to the CO₂ record
+  - a chart showing the answer settling as runs are added
+  - a five-seed check in the notebook (section 10): the median varies by only 1.3 ppm across seeds
+- **Test with five seeds (1,000 runs each):** medians 434.5–437.4 ppm. All five ranges contain the measured 424.6 ppm, with 37–40% of runs below it, so the result does not depend on the seed.
+- **I asked:** what exactly the experiment does and where the CO₂ goes. Claude computed the model's actual split of emissions since 1850: air 42%, ocean 32%, land 26%. The Global Carbon Budget gives 39 / 27 / 23%, with 11% unaccounted for. (Claude had first quoted rounded numbers from memory, then replaced them with the model's output.)
+- **I asked for:** a clear results section and a plain explanation. Added:
+  - a "What this experiment does" box above the lab
+  - a "Results" box right after each run, with the question, a yes/no answer, where the CO₂ went, what causes most of the uncertainty, and whether the result can be trusted
+  - the default number of runs raised from 1,000 to 2,000 so the result reliably settles
+  - a "The question, the model and the algorithm" box before the experiment: the research question, the five boxes and the four rules, and the algorithm as pseudocode
 
 ## Where things are
 

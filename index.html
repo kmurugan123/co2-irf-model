@@ -88,6 +88,8 @@ details.adv>.small,details.adv>.controls{padding:0 14px 14px}
 .explain h3{font-size:17px}
 .explain p{font-size:14.5px;max-width:75ch}
 .explain ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:5px;font-size:14.5px;max-width:75ch}
+.explain ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14.5px;max-width:75ch}
+pre.algo{margin:0;font-family:var(--f-mono);font-size:12.5px;line-height:1.5;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre}
 .verdict{font-size:16px;font-weight:500;max-width:none}
 .hl{font-family:var(--f-mono)}
 .chart{width:100%;overflow-x:auto}
@@ -236,6 +238,34 @@ code{font-family:var(--f-mono);font-size:12.5px}
 <section class="card" aria-labelledby="h-lab" id="lab">
   <span class="eyebrow">Try it yourself</span>
   <h2 id="h-lab">Uncertainty lab: run the model thousands of times</h2>
+  <div class="explain">
+    <h3>The question, the model and the algorithm</h3>
+    <p><b>The question.</b> How well can a carbon-cycle model built from physics and chemistry reproduce the rise in atmospheric CO₂ measured since 1850, using only historical emissions as input?</p>
+    <p><b>The model.</b> The world's carbon is split into five boxes: the <b>air</b>, the <b>surface ocean</b> (top 75 m), the <b>middle ocean</b> (75–1,000 m), the <b>deep ocean</b> (below 1,000 m) and <b>land</b> (plants and soils). Each year carbon moves between them by four rules:</p>
+    <ul>
+      <li><b>Emissions</b> from fuel and forest clearing go into the air (real yearly data from the Global Carbon Budget, 1850–2024).</li>
+      <li><b>Air → surface ocean:</b> CO₂ dissolves in proportion to the difference between the air and the water. Seawater chemistry makes the ocean resist more as it fills (BEAM model, Glotter et al. 2014).</li>
+      <li><b>Surface → middle → deep ocean:</b> water mixes downward. The middle layer turns over in about a decade, the deep ocean over centuries.</li>
+      <li><b>Air ↔ land:</b> plants grow a little faster when CO₂ is higher (fertilization), and soils release carbon back over about 35 years.</li>
+    </ul>
+    <p><b>The algorithm.</b> One model run works like a ledger: every 0.02 years it calculates how much carbon moves along each arrow, then updates every box. Carbon is never created or lost. The Monte Carlo experiment wraps that in a loop:</p>
+    <pre class="algo">for each of N runs:
+    draw random inputs within their measured ranges
+        (forest emissions, fuel emissions, ocean carbon by 1994,
+         deep-water age, land uptake 1960–1999)
+    turn them into model rates using lookup tables built from ocean
+        and land data only (never from the CO₂ record)
+    for each year from 1850 to 2024 (or 2100):
+        for each of 50 small time steps:
+            add emissions to the air
+            move carbon air → ocean, down the ocean layers, air ↔ land
+    record CO₂ each year and where the carbon ended up
+
+sort the N results → 5%, 50%, 95% values
+compare the range with the measured 424.6 ppm
+measure which input moves the result most (correlation)
+check the answer settled and both halves of the runs agree</pre>
+  </div>
   <div class="explain">
     <h3>What this experiment does</h3>
     <p><b>The problem:</b> the model needs some numbers that scientists only know roughly, such as how much CO₂ came from clearing forests. If we guess one value, we get one answer, but we don't know how far off it could be.</p>
