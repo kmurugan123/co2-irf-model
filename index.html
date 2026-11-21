@@ -90,6 +90,15 @@ details.adv>.small,details.adv>.controls{padding:0 14px 14px}
 .explain ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:5px;font-size:14.5px;max-width:75ch}
 .explain ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14.5px;max-width:75ch}
 pre.algo{margin:0;font-family:var(--f-mono);font-size:12.5px;line-height:1.5;background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre}
+.checks{display:flex;flex-direction:column;gap:12px}
+.chk{border:1px solid var(--rule);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.check-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.rbar{display:block;width:100%;max-width:640px;height:auto}
+.rlegend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.rlegend span{display:inline-flex;align-items:center;gap:5px}
+details.why summary{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ocean)}
+details.why p{font-size:14px;margin-top:6px;max-width:78ch}
+.why-used{background:var(--bg);border-radius:6px;padding:6px 8px}
 .verdict{font-size:16px;font-weight:500;max-width:none}
 .hl{font-family:var(--f-mono)}
 .chart{width:100%;overflow-x:auto}
@@ -349,7 +358,8 @@ check the answer settled and both halves of the runs agree</pre>
   <span class="eyebrow">Report card</span>
   <h2 id="h-checks">How the model scores against published results</h2>
   <p class="small">Each row compares a number from the model with a number measured or published by scientists. "Passes" means the model is within the published error range.</p>
-  <div class="tablewrap"><table><thead><tr><th>Check</th><th>Published</th><th>Model</th><th>Result</th></tr></thead><tbody id="checkRows"></tbody></table></div>
+  <p class="small"><b>How to read each check:</b> the shaded bar is the range scientists say is acceptable (their value ± its uncertainty). The dark tick is their best value, and the blue dot is the model. A check <b>passes</b> when the dot lands inside the shaded range. Open "Why" under any check to see how both numbers were made.</p>
+  <div id="checkRows" class="checks"></div>
   <p class="small" id="checkNote"></p>
 </section>
 
@@ -624,25 +634,79 @@ function drawSink(host, model, gcb, title, end) {
 function mean(a, i0, i1) { let s = 0; for (let i = i0; i <= i1; i++) s += a[i]; return s / (i1 - i0 + 1); }
 function drawChecks(R) {
   const r = R.run, pl = R.pulse, i15 = 2015 - 1850, i24 = 2024 - 1850, i00 = 2000 - 1850;
-  const rows = [
-    ["Pulse still airborne after 1,000 yr", "25 ± 9%", pl.atm[999] * 100, 25, 9, "%", "Joos et al. 2013"],
-    ["Pulse taken up by the ocean", "59 ± 12%", pl.ocean[999] * 100, 59, 12, "%", "Joos et al. 2013"],
-    ["Pulse taken up by land", "16 ± 14%", pl.land[999] * 100, 16, 14, "%", "Joos et al. 2013"],
-    ["Ocean sink 2015–2024", "3.22 ± 0.4 GtC/yr", mean(r.ocean, i15, i24), 3.22, 0.4, " GtC/yr", "GCB 2025"],
-    ["Land sink 2015–2024", "2.36 ± 0.8 GtC/yr", mean(r.land, i15, i24), 2.36, 0.8, " GtC/yr", "GCB 2025"],
-    ["Ocean carbon gained 1850–1994 (CO₂ as measured)", "118 ± 19 GtC", R.inv94, 118, 19, " GtC", "Sabine et al. 2004"],
-    ["Surface pH drop 1850–2000", "0.11 ± 0.03", r.pH[0] - r.pH[i00], 0.11, 0.03, "", "Jiang et al. 2019"],
-    ["CO₂ in 2024 (never used to set anything)", "424.6 ppm", r.ppm[i24], 424.6, null, " ppm", "NOAA Mauna Loa"],
+  const t3 = presetIs("t3"), con = presetIs("con");
+  const PULSE_HOW = "The model holds CO₂ at 389 ppm (the 2010 level), adds 100 GtC over one year, and runs 1,000 years. It compares this with an identical run without the extra carbon. The difference shows where the added carbon ended up.";
+  const JOOS_SRC = "Joos et al. (2013) ran this same experiment in 15 published carbon-cycle models. The ± is the spread between those models.";
+  const mcB = t3 && useLuc && +$("scale").value === 1 ? MC[feedback ? "fb" : "nofb"] : null;
+  const checks = [
+    { name: "Carbon still in the air 1,000 years after a big release", short: "Does the model keep CO₂ in the air for the right length of time?",
+      v: pl.atm[999] * 100, c: 25, u: 9, unit: "%", dec: 0, src: "Joos et al. 2013", how: PULSE_HOW + " This row is the share left in the air.", from: JOOS_SRC, kind: "test" },
+    { name: "Share of that carbon taken up by the ocean", short: "Does the ocean absorb the right share over centuries?",
+      v: pl.ocean[999] * 100, c: 59, u: 12, unit: "%", dec: 0, src: "Joos et al. 2013", how: PULSE_HOW + " This row is the extra carbon found in all three ocean layers.", from: JOOS_SRC, kind: "test" },
+    { name: "Share of that carbon taken up by land", short: "Do plants and soils absorb the right share?",
+      v: pl.land[999] * 100, c: 16, u: 14, unit: "%", dec: 0, src: "Joos et al. 2013", how: PULSE_HOW + " This row is the extra carbon found in plants and soils.", from: JOOS_SRC, kind: "test" },
+    { name: "Carbon the ocean absorbs each year, 2015–2024", short: "Is the ocean absorbing the right amount today?",
+      v: mean(r.ocean, i15, i24), c: 3.22, u: 0.4, unit: " GtC/yr", dec: 2, src: "Global Carbon Budget 2025",
+      how: "The main run, driven by real emissions since 1850, records how much carbon flows from the air into the ocean each year. This is the 2015–2024 average.",
+      from: "The Global Carbon Budget combines ocean models with millions of measurements of CO₂ in seawater. The ± is its reported uncertainty (1 standard deviation).", kind: "test" },
+    { name: "Carbon land absorbs each year, 2015–2024", short: "Are plants absorbing the right amount today?",
+      v: mean(r.land, i15, i24), c: 2.36, u: 0.8, unit: " GtC/yr", dec: 2, src: "Global Carbon Budget 2025",
+      how: "The same main run records the flow from the air into plants and soils each year. This is the 2015–2024 average." + (t3 || con ? " The plants' response to CO₂ was set from the 1960–1999 land sink, so 2015–2024 is a different period and still a real test." : ""),
+      from: "The Global Carbon Budget's land sink is the average of about 20 vegetation models. The ± is its reported uncertainty (1 standard deviation).", kind: "test" },
+    { name: "Carbon the ocean had absorbed by 1994", short: "Has the ocean stored the right total amount?",
+      v: R.inv94, c: 118, u: 19, unit: " GtC", dec: 0, src: "Sabine et al. 2004",
+      how: "The model is run with CO₂ forced to follow the measured record, and the carbon the ocean took in each year from 1850 to 1994 is added up.",
+      from: "Sabine et al. measured the human-made carbon in seawater on ship surveys across the world's oceans in the 1990s. The ± is their reported uncertainty.",
+      kind: (t3 || con) ? "used" : "test" },
+    { name: "Drop in ocean surface pH, 1850–2000", short: "Is the ocean becoming more acidic at the right rate?",
+      v: r.pH[0] - r.pH[i00], c: 0.11, u: 0.03, unit: "", dec: 3, src: "Jiang et al. 2019",
+      how: "The model calculates surface-ocean pH from the carbon in the surface layer, using seawater chemistry. This is pH in 1850 minus pH in 2000.",
+      from: "Jiang et al. combined ocean observations into a global pH history. Their period starts in 1770, slightly earlier than the model's. The ± is how much the change varies across the ocean.", kind: "test" },
+    { name: "CO₂ in the air in 2024", short: "The main question: does the model match the measured CO₂?",
+      v: r.ppm[i24], c: 424.6, u: null, unit: " ppm", dec: 1, src: "NOAA Mauna Loa",
+      how: "The main run adds real emissions every year from 1850 and lets the ocean and plants absorb some. This is the CO₂ left in the air in 2024. The CO₂ measurements were never used to set anything.",
+      from: "Measured continuously at Mauna Loa, Hawaii, to within about 0.1 ppm.", kind: "co2" },
   ];
-  $("checkRows").innerHTML = rows.map(([name, pub, v, c, u, unit, src], i) => {
-    const dec = unit === "" ? 3 : unit === "%" || unit === " GtC" ? 0 : unit === " ppm" ? 1 : 2;
-    if (u == null) { const d = v - c; return `<tr><td>${name}<br><span class="small">${src}</span></td><td class="num">${pub}</td><td class="num">${v.toFixed(dec)}${unit}</td><td><span class="pill info">${d >= 0 ? "+" : ""}${d.toFixed(1)} ppm</span></td></tr>`; }
-    const ok = Math.abs(v - c) <= u;
-    const used = (i === 5 && (presetIs("con") || presetIs("t3"))) ? ` <span class="pill info">used to set ${presetIs("t3") ? "k_1" : "k_d"}</span>` : "";
-    return `<tr><td>${name}<br><span class="small">${src}</span></td><td class="num">${pub}</td><td class="num">${v.toFixed(dec)}${unit}</td><td><span class="pill ${ok ? "pass" : "fail"}">${ok ? "passes" : "misses"}</span>${used}</td></tr>`;
+  $("checkRows").innerHTML = checks.map((k, idx) => {
+    let lo, hi, ok, verdict, band;
+    if (k.kind === "co2") {
+      if (mcB) { lo = mcB.p5[i24]; hi = mcB.p95[i24]; ok = k.c >= lo && k.c <= hi;
+        band = [lo, hi];
+        verdict = `A single run can't show how uncertain the model is, so this check compares the measurement with the model's uncertainty range. In 2,000 Monte Carlo runs, the model gives <b>${lo.toFixed(0)}–${hi.toFixed(0)} ppm</b> for 2024 (90% of runs). The measured <b>424.6 ppm</b> is ${ok ? "inside" : "outside"} that range, so it <b>${ok ? "passes" : "misses"}</b>. This single run is ${(k.v - k.c).toFixed(1)} ppm ${k.v > k.c ? "above" : "below"} the measurement.`;
+      } else { ok = null; band = null;
+        verdict = `This run is ${Math.abs(k.v - k.c).toFixed(1)} ppm ${k.v > k.c ? "above" : "below"} the measurement. Pick Version 3 with default emissions to see this checked against the model's Monte Carlo uncertainty range.`; }
+    } else {
+      lo = k.c - k.u; hi = k.c + k.u; band = [lo, hi]; ok = k.v >= lo && k.v <= hi;
+      const diff = k.v - k.c, use = Math.abs(diff) / k.u * 100;
+      verdict = `Scientists' value is <b>${k.c} ± ${k.u}${k.unit}</b>, so anything from <b>${lo.toFixed(k.dec)} to ${hi.toFixed(k.dec)}${k.unit}</b> counts as a match. The model gives <b>${k.v.toFixed(k.dec)}${k.unit}</b>, which is ${Math.abs(diff).toFixed(k.dec)}${k.unit} ${diff >= 0 ? "above" : "below"} their value. ${ok ? `That uses ${use.toFixed(0)}% of the allowed margin, so it <b>passes</b>.` : `That is ${(Math.abs(diff) - k.u).toFixed(k.dec)}${k.unit} outside the allowed range, so it <b>misses</b>.`}`;
+    }
+    const status = k.kind === "used" ? `<span class="pill info">used to set the model</span>` : ok == null ? `<span class="pill info">see uncertainty lab</span>` : `<span class="pill ${ok ? "pass" : "fail"}">${ok ? "passes" : "misses"}</span>`;
+    const usedNote = k.kind === "used" ? `<p class="why-used"><b>Not a real test in this version.</b> This number was used to set how fast the ocean mixes, so the model matches it by design. It's shown so you can see the setting worked. The other rows are genuine predictions.</p>` : "";
+    return `<div class="chk">
+      <div class="check-head"><div><b>${k.name}</b><br><span class="small">${k.short}</span></div>${status}</div>
+      ${rangeBar(k, band, ok)}
+      <details class="why"><summary>Why ${k.kind === "used" ? "it matches" : ok == null ? "" : ok ? "it passes" : "it misses"}${ok == null && k.kind !== "used" ? "this result" : ""}</summary>
+        <p>${verdict}</p>${usedNote}
+        <p><b>How the model gets its number:</b> ${k.how}</p>
+        <p><b>Where the published number comes from:</b> ${k.from} <span class="small">(${k.src})</span></p>
+      </details></div>`;
   }).join("");
-  $("checkNote").textContent = presetIs("con") ? "In Version 2, two numbers were set from ocean and land data (marked \"used to set\"). Every other row is a genuine prediction. The CO₂ record was never used." :
-    presetIs("t3") ? "In Version 3, the model's rates were set from ocean and land data (the row marked \"used to set\", plus the deep-water age and land uptake). Every other row is a genuine prediction. The CO₂ record was never used." : "";
+  $("checkNote").textContent = con ? "In Version 2, the ocean inventory and the 1960–1999 land sink were used to set the model, so those don't count as tests. Every other row is a genuine prediction, and the CO₂ record was never used." :
+    t3 ? "In Version 3, the ocean inventory, the deep-water age and the 1960–1999 land sink were used to set the model. Every row marked passes or misses is a genuine prediction, and the CO₂ record was never used." : "";
+}
+function rangeBar(k, band, ok) {
+  const pts = [k.v, k.c, ...(band || [])], mn = Math.min(...pts), mx = Math.max(...pts), pad = (mx - mn) * 0.25 || Math.abs(k.c) * 0.1 || 1;
+  const a = mn - pad, b = mx + pad, W = 600, x = v => 12 + (v - a) / (b - a) * (W - 24);
+  const f = n => n.toFixed(k.dec);
+  let svg = `<svg viewBox="0 0 ${W} 46" class="rbar" role="img" aria-label="model ${f(k.v)}${k.unit}, published ${k.c}${k.unit}">`;
+  svg += `<line x1="12" x2="${W - 12}" y1="20" y2="20" stroke="var(--rule)" stroke-width="2"/>`;
+  if (band) svg += `<rect x="${x(band[0])}" y="11" width="${x(band[1]) - x(band[0])}" height="18" rx="4" fill="${ok === false ? "var(--band)" : "rgba(47,125,79,.18)"}" stroke="${ok === false ? "var(--fossil)" : "var(--pass)"}" stroke-width="1"/>`
+    + `<text x="${x(band[0])}" y="42" text-anchor="middle">${k.kind === "co2" ? band[0].toFixed(0) : f(band[0])}</text><text x="${x(band[1])}" y="42" text-anchor="middle">${k.kind === "co2" ? band[1].toFixed(0) : f(band[1])}</text>`;
+  svg += `<line x1="${x(k.c)}" x2="${x(k.c)}" y1="6" y2="34" stroke="var(--ink)" stroke-width="2"/>`;
+  svg += `<circle cx="${x(k.v)}" cy="20" r="7" fill="var(--ocean)" stroke="var(--panel)" stroke-width="2"/>`;
+  const ml = x(k.v) > W - 120 ? "end" : "start", mx2 = ml === "end" ? x(k.v) - 10 : x(k.v) + 10;
+  svg += `<text x="${mx2}" y="9" text-anchor="${ml}" style="fill:var(--ocean);font-weight:600">model ${f(k.v)}${k.unit}</text>`;
+  return svg + `</svg><div class="rlegend"><span><i class="dot" style="background:var(--ocean)"></i>model</span><span><i class="sw" style="background:var(--ink);width:2px;height:12px"></i>published value ${k.c}${k.unit}</span>${band ? `<span><i class="sw" style="background:rgba(47,125,79,.25)"></i>${k.kind === "co2" ? "model's 90% range" : "accepted range"}</span>` : ""}</div>`;
 }
 function presetIs(k) {
   const P = PRESETS[k], same = (a, b) => Math.abs(a - b) < 1e-9;

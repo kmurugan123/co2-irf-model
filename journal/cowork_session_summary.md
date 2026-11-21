@@ -1,4 +1,4 @@
-# Cowork session summary (Oct 30 – Nov 12, 2026)
+# Cowork session summary (Oct 30 – Nov 20, 2026)
 
 This work was done in a Claude app (Cowork) session, so it isn't captured in the automatic Claude Code logs.
 Claude wrote this summary at my request. It is a summary, not a transcript. Session link: https://claude.ai/code/session_01ULYh5MPzGSCSWTC1CLAhSi
@@ -59,6 +59,36 @@ Claude wrote this summary at my request. It is a summary, not a transcript. Sess
   - a "Results" box right after each run, with the question, a yes/no answer, where the CO₂ went, what causes most of the uncertainty, and whether the result can be trusted
   - the default number of runs raised from 1,000 to 2,000 so the result reliably settles
   - a "The question, the model and the algorithm" box before the experiment: the research question, the five boxes and the four rules, and the algorithm as pseudocode
+
+## November 12–17: understanding the model and the algorithm
+
+- I asked Claude to explain, more and more simply, what the experiment does, what data I gave and what is used from it, what the model does each year since 1850, what is known, predicted and uncertain, and how each prediction is made.
+- Key points I took away:
+  - **Inputs:** yearly emissions from fuel and land clearing (Global Carbon Budget 2025).
+  - **Checks only:** Mauna Loa, NOAA global CO₂, ice cores, the GCB ocean and land sinks, Joos et al. 2013 and ocean pH.
+  - **Used to set physical speeds:** the ocean inventory (Sabine et al. 2004), the deep-water age (Matsumoto 2007) and the 1960–1999 land sink.
+  - **Each year** the model adds emissions to the air, lets the ocean and plants absorb some, mixes the ocean downward and records the CO₂. Like a bathtub: emissions are the tap, the ocean and plants are the drains, and the water level is the CO₂.
+  - **Not known exactly:** land-clearing emissions (the biggest unknown), the plant response, ocean mixing speeds and TCRE. These are randomized in the Monte Carlo.
+  - **Left out:** El Niño, seasons, regional detail, land warming effects.
+- Added a "The question, the model and the algorithm" box to the page before the experiment, with pseudocode.
+- My original Scripps Mauna Loa link was blocked from Claude's workspace, so the NOAA record from the same site is used. The two differ by less than 0.5 ppm.
+
+## November 20: feedback round, report card
+
+- **My feedback:** the report card was a black box that just said "passes". I wanted to know why each check passes.
+- **Fix:** each check now shows:
+  - a range bar: the accepted range scientists give (their value ± uncertainty), their value and the model's value
+  - "Why it passes": the accepted range in numbers, the model's value, how far off it is and how much of the allowed margin it uses
+  - how the model calculates its number, and where the published number comes from and what its ± means
+- **Results:**
+  - Pulse in the air: 24% vs 25 ± 9 (11% of the margin used).
+  - Pulse in the ocean: 55% vs 59 ± 12 (32%).
+  - Pulse on land: 21% vs 16 ± 14 (35%).
+  - Ocean sink 2015–2024: 3.44 vs 3.22 ± 0.4 (56%).
+  - Land sink 2015–2024: 2.97 vs 2.36 ± 0.8 (76%).
+  - pH drop: 0.104 vs 0.11 ± 0.03 (20%).
+  - The 1994 ocean inventory is marked "used to set the model". It is not counted as a test.
+  - 2024 CO₂ is judged against the Monte Carlo 90% range (387–504 ppm), which contains the measured 424.6.
 
 ## Where things are
 
